@@ -3,12 +3,19 @@ version: '3.8'
 services:
   # Service 1: The PHP-Apache App Server
     app:
-        image: php:8.3-apache  # Use the official PHP image with Apache
+        build:
+          context: .
+          dockerfile: Dockerfile  # We'll create a custom Dockerfile to install PDO
         container_name: my-php-app
         ports:
             - "8080:80"  # Map your computer's port 8080 to the container's port 80
         volumes:
             - ./src:/var/www/html # Mount your 'src' folder into the container's web root
+        environment:
+            DB_HOST: db
+            DB_NAME: webdev_asg_db
+            DB_USER: user1
+            DB_PASS: "1234"
         depends_on:
             - db  # Tells this service to wait until the 'db' service is running
 
