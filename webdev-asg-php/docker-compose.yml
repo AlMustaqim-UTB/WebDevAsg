@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Service 1: The PHP-Apache App Server
+    app:
+        build:
+          context: .
+          dockerfile: Dockerfile  # We'll create a custom Dockerfile to install PDO
+        container_name: my-php-app
+        ports:
+            - "8080:80"  # Map your computer's port 8080 to the container's port 80
+        volumes:
+            - ./src:/var/www/html # Mount your 'src' folder into the container's web root
+        environment:
+            DB_HOST: db
+            DB_NAME: webdev_asg_db
+            DB_USER: user1
+            DB_PASS: "1234"
+        depends_on:
+            - db  # Tells this service to wait until the 'db' service is running
+
+  # Service 2: The Database Server
+    db:
+        image: mariadb:10.11  # Use a specific MariaDB image
+        container_name: my-php-db
+        restart: always  # Always restart the DB if it crashes
+        environment:
+            MYSQL_ROOT_PASSWORD: 12345
+            MYSQL_DATABASE: webdev_asg_db
+            MYSQL_USER: user1
+            MYSQL_PASSWORD: 1234
+        volumes:
+            - db-data:/var/lib/mysql  # Persist database data in a named volume
+
+
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: my-phpmyadmin
+        restart: always
+        ports:
+            - "8081:80"  # Access PhpMyAdmin on port 8081
+        environment:
+            PMA_HOST: db  # Tells PhpMyAdmin to connect to the 'db' service
+            PMA_PORT: 3306
+        depends_on:
+            - db
+
+# Defines the named volume for persisting data
+volumes:
+  db-data:
