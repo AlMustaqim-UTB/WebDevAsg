@@ -23,7 +23,7 @@ try {
     $pdo = new PDO($dsn, $user, $pass, $options);
 
     // Example query — adjust the table name/columns to your schema
-    $stmt = $pdo->query('SELECT * FROM testTable');
+    $stmt = $pdo->query('SELECT * FROM user');
     $rows = $stmt->fetchAll();
 
     echo json_encode(['success' => true, 'data' => $rows]);
