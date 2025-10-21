@@ -16,20 +16,29 @@
         header("Access-Control-Allow-Origin: *");
     }
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+
     header('Access-Control-Allow-Headers: Content-Type');
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
+
+    #db configuration
+    require_once 'config.php';
 
     $action = $_REQUEST['action'] ?? ($_SERVER['REQUEST_METHOD'] === 'GET' ? 'list' : null);
 
     // DB connection with error handling
-    $host = getenv('DB_HOST') ?: 'db';
-    $db   = getenv('DB_NAME') ?: 'webdev_asg_db';
-    $user = getenv('DB_USER') ?: 'user1';
-    $pass = getenv('DB_PASS') ?: '1234';
+    // $host = getenv('DB_HOST') ?: 'db';
+    // $db   = getenv('DB_NAME') ?: 'webdev_asg_db';
+    // $user = getenv('DB_USER') ?: 'user1';
+    // $pass = getenv('DB_PASS') ?: '1234';
     $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
+    // $user = "your user";
+    // $pass = "your password";
+    // $connectionString = "mysql:host=localhost;dbname=webdev_asg_db";
+
 
     try {
         $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+        // $pdo = new PDO($connectionString, $user, $pass);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'DB connection failed: ' . $e->getMessage()]);
