@@ -10,19 +10,50 @@
     <button id="load">Load data</button> 
     <pre id="out"></pre>
 
+    <h2>AddUser</h2>
+    <div>
+        <input id="userID" type="text" placeholder="User ID" />
+        <input id="firstName" type="text" placeholder="First name" />
+        <input id="lastName" type="text" placeholder="Last name" />
+        <input id="phoneNo" type="text" placeholder="Phone number" />
+        <button id="addUser">Add User</button>
+    </div>
+
     <script>
-    document.getElementById('load').addEventListener('click', async () => {
         const out = document.getElementById('out');
-        out.textContent = 'Loading...';
-        try {
-            const res = await fetch('http://localhost:8080/api/get_data.php');
-            if (!res.ok) throw new Error(res.statusText);
-            const json = await res.json();
-            out.textContent = JSON.stringify(json, null, 2);
-        } catch (err) {
-            out.textContent = 'Error: ' + err.message;
+        const apiBaseUrl = 'http://localhost:8080/api/indexDB.php';
+
+        // Generic fetch handler to reduce repetition
+        async function handleFetch(url, options = {}) {
+            out.textContent = 'Loading...';
+            try {
+                const res = await fetch(url, options);
+                const text = await res.text();
+                if (!res.ok) throw new Error(text || res.statusText);
+                const json = text ? JSON.parse(text) : { success: true, message: 'OK' };
+                out.textContent = JSON.stringify(json, null, 2);
+            } catch (err) {
+                out.textContent = 'Error: ' + err.message;
+            }
         }
-    });
+
+        document.getElementById('load').addEventListener('click', () => {
+            handleFetch(`${apiBaseUrl}?action=list`);
+        });
+
+        document.getElementById('addUser').addEventListener('click', () => {
+            const payload = {
+                userID: document.getElementById('userID').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phoneNo: document.getElementById('phoneNo').value
+            };
+            handleFetch(`${apiBaseUrl}?action=add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        });
     </script>
 </body>
 </html>
