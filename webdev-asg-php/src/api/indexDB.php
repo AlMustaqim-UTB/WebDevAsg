@@ -27,9 +27,14 @@
     $user = getenv('DB_USER') ?: 'user1';
     $pass = getenv('DB_PASS') ?: '1234';
     $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
+    // $user = "your user";
+    // $pass = "your password";
+    // $connectionString = "mysql:host=localhost;dbname=webdev_asg_db";
+
 
     try {
         $pdo = new PDO($dsn, $user, $pass, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+        // $pdo = new PDO($connectionString, $user, $pass);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'DB connection failed: ' . $e->getMessage()]);
