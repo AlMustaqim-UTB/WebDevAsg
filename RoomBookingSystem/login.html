@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link rel="stylesheet" type="text/css" href="css/loginStyle.css">
+</head>
+<body>
+  <div class="overlay">
+    <div class="card" role="form" aria-labelledby="login-title">
+        <div class="logoBrand"><img src="css/images/logo.png" alt=""></div>
+      <div class="brand">
+        <h1 id="login-title">Welcome back</h1>
+        <p class="sub">Sign in to access your dashboard and manage your bookings.</p>
+      </div>
+
+      <form action="main.html">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com"  />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" />
+        </div>
+
+        <div class="row">
+          <label class="checkbox">
+            <input type="checkbox" id="remember"> Remember me
+          </label>
+        </div>
+
+        <button class="btn" type="submit">Sign in</button>
+
+        <div class="divider">or</div>
+
+        <div class="links">
+          New here? <a>Create an account</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

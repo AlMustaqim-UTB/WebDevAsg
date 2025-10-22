@@ -22,9 +22,7 @@
 
     #db configuration
     require_once 'config.php';
-
     $action = $_REQUEST['action'] ?? ($_SERVER['REQUEST_METHOD'] === 'GET' ? 'list' : null);
-
     $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
 
     try {
