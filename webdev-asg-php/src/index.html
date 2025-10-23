@@ -12,11 +12,18 @@
 
     <h2>AddUser</h2>
     <div>
-        <input id="userID" type="text" placeholder="User ID" />
-        <input id="firstName" type="text" placeholder="First name" />
-        <input id="lastName" type="text" placeholder="Last name" />
-        <input id="phoneNo" type="text" placeholder="Phone number" />
+        <input id="customerID" type="text" placeholder="customerID" />
+        <input id="licenseNo" type="text" placeholder="licenseNo" />
+        <input id="email" type="text" placeholder="email" />
+        <input id="password" type="password" placeholder="password" />
         <button id="addUser">Add User</button>
+    </div>
+
+    <h2>VerifyPass</h2>
+    <div>
+        <input id="verifyCustomerID" type="text" placeholder="customerID" />
+        <input id="verifyPassword" type="password" placeholder="password" />
+        <button id="verify">Verify</button>
     </div>
 
     <script>
@@ -38,18 +45,33 @@
             }
         }
 
+        //load data function basix
         document.getElementById('load').addEventListener('click', () => {
             handleFetch(`${apiBaseUrl}?action=list`);
         });
 
+        //add user function
         document.getElementById('addUser').addEventListener('click', () => {
             const payload = {
-                userID: document.getElementById('userID').value,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                phoneNo: document.getElementById('phoneNo').value
+                customerID: document.getElementById('customerID').value,
+                licenseNo: document.getElementById('licenseNo').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
             };
             handleFetch(`${apiBaseUrl}?action=add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        });
+
+        //verify custID and pass funct
+        document.getElementById('verify').addEventListener('click', () => {
+            const payload = {
+                customerID: document.getElementById('verifyCustomerID').value,
+                password: document.getElementById('verifyPassword').value
+            };
+            handleFetch(`${apiBaseUrl}?action=verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
