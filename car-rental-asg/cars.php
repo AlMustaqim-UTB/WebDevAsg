@@ -1,0 +1,114 @@
+<?php
+include '../config/db.php';
+
+if (isset($_GET['delete'])) {
+  $id = $_GET['delete'];
+  $conn->query("DELETE FROM car WHERE carID = '$id'");
+  header("Location: cars.php");
+  exit;
+}
+
+if (isset($_POST['add_car'])) {
+  $carID = $_POST['carID'];
+  $plateNo = $_POST['plateNo'];
+  $rate = $_POST['ratePerDay'];
+  $status = $_POST['status'];
+  $model = $_POST['carModel'];
+  $year = $_POST['year'];
+  $capacity = $_POST['capacity'];
+  $trans = $_POST['transmission'];
+  $makeID = $_POST['makeID'];
+  $categoryID = $_POST['categoryID'];
+  $conn->query("INSERT INTO car (carID, plateNo, ratePerDay, status, carModel, year, capacity, transmission, description, imageURL, makeID, categoryID)
+                VALUES ('$carID','$plateNo','$rate','$status','$model','$year','$capacity','$trans','N/A','N/A','$makeID','$categoryID')");
+  header("Location: cars.php");
+  exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Cars</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../logo.png" alt="Logo"></li>
+        <li><a href="customers.php">Customers</a></li>
+        <li><a href="cars.php" class="active">Cars</a></li>
+        <li><a href="rentals.php">Rentals</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h1>Cars</h1>
+      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Car</button>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Car ID</th>
+              <th>Plate No</th>
+              <th>Model</th>
+              <th>Make</th>
+              <th>Year</th>
+              <th>Rate/Day</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            $query = "SELECT car.carID, car.plateNo, car.carModel, carMake.makeName, car.year, car.ratePerDay, car.status 
+                      FROM car 
+                      JOIN carMake ON car.makeID = carMake.makeID";
+            $result = $conn->query($query);
+            while ($row = $result->fetch_assoc()):
+            ?>
+            <tr>
+              <td><?= $row['carID'] ?></td>
+              <td><?= $row['plateNo'] ?></td>
+              <td><?= $row['carModel'] ?></td>
+              <td><?= $row['makeName'] ?></td>
+              <td><?= $row['year'] ?></td>
+              <td><?= $row['ratePerDay'] ?></td>
+              <td><?= $row['status'] ?></td>
+              <td><a href="cars.php?delete=<?= $row['carID'] ?>" class="delete-btn" onclick="return confirm('Delete this car?')">Delete</a></td>
+            </tr>
+            <?php endwhile; ?>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
+      <h2>Add New Car</h2>
+      <form method="POST">
+        <input type="text" name="carID" placeholder="Car ID (e.g. CI004)" required>
+        <input type="text" name="plateNo" placeholder="Plate No" required>
+        <input type="number" name="ratePerDay" placeholder="Rate/Day" required>
+        <input type="text" name="carModel" placeholder="Car Model" required>
+        <input type="number" name="year" placeholder="Year" required>
+        <input type="number" name="capacity" placeholder="Capacity" required>
+        <input type="text" name="transmission" placeholder="Transmission" required>
+        <input type="text" name="makeID" placeholder="Make ID (e.g. CM01)" required>
+        <input type="text" name="categoryID" placeholder="Category ID (e.g. CT01)" required>
+        <select name="status">
+          <option value="Available">Available</option>
+          <option value="Rented">Rented</option>
+        </select>
+        <button type="submit" name="add_car">Add Car</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

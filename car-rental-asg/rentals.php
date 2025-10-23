@@ -1,0 +1,119 @@
+<?php
+include '../config/db.php';
+
+if (isset($_GET['delete'])) {
+  $id = $_GET['delete'];
+  $conn->query("DELETE FROM rentalID WHERE rentalID = '$id'");
+  header("Location: rentals.php");
+  exit;
+}
+
+if (isset($_POST['add_rental'])) {
+  $rentalID = $_POST['rentalID'];
+  $customerID = $_POST['customerID'];
+  $carID = $_POST['carID'];
+  $startDate = $_POST['startDate'];
+  $endDate = $_POST['endDate'];
+  $totalPrice = $_POST['totalPrice'];
+  $status = $_POST['rentalStatus'];
+  $paymentID = $_POST['paymentID'];
+  $location = $_POST['deliveryLocation'];
+
+  $conn->query("INSERT INTO rentalID (rentalID, customerID, carID, startDate, endDate, totalPrice, rentalStatus, paymentID, deliveryLocation)
+                VALUES ('$rentalID','$customerID','$carID','$startDate','$endDate','$totalPrice','$status','$paymentID','$location')");
+  header("Location: rentals.php");
+  exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Rentals</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../logo.png" alt="Logo"></li>
+        <li><a href="customers.php">Customers</a></li>
+        <li><a href="cars.php">Cars</a></li>
+        <li><a href="rentals.php" class="active">Rentals</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h1>Rentals</h1>
+      <p>View and manage all car rental records below.</p>
+
+      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Rental</button>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Rental ID</th>
+              <th>Customer ID</th>
+              <th>Car ID</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Total Price</th>
+              <th>Status</th>
+              <th>Location</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            $query = "SELECT * FROM rentalID";
+            $result = $conn->query($query);
+            while ($row = $result->fetch_assoc()):
+            ?>
+            <tr>
+              <td><?= $row['rentalID'] ?></td>
+              <td><?= $row['customerID'] ?></td>
+              <td><?= $row['carID'] ?></td>
+              <td><?= $row['startDate'] ?></td>
+              <td><?= $row['endDate'] ?></td>
+              <td><?= $row['totalPrice'] ?></td>
+              <td><?= $row['rentalStatus'] ?></td>
+              <td><?= $row['deliveryLocation'] ?></td>
+              <td>
+                <a href="rentals.php?delete=<?= $row['rentalID'] ?>" class="delete-btn" onclick="return confirm('Delete this rental?')">Delete</a>
+              </td>
+            </tr>
+            <?php endwhile; ?>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
+      <h2>Add New Rental</h2>
+      <form method="POST">
+        <input type="text" name="rentalID" placeholder="Rental ID (e.g. RI005)" required>
+        <input type="text" name="customerID" placeholder="Customer ID (e.g. CU00001)" required>
+        <input type="text" name="carID" placeholder="Car ID (e.g. CI001)" required>
+        <input type="date" name="startDate" required>
+        <input type="date" name="endDate" required>
+        <input type="number" step="0.01" name="totalPrice" placeholder="Total Price" required>
+        <select name="rentalStatus">
+          <option value="Pending">Pending</option>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+        <input type="text" name="paymentID" placeholder="Payment ID (e.g. PI004)" required>
+        <input type="text" name="deliveryLocation" placeholder="Delivery Location" required>
+        <button type="submit" name="add_rental">Add Rental</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
