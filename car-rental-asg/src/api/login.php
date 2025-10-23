@@ -31,12 +31,6 @@
         exit;
     }
 
-    // const res = await fetch('http://localhost:8080/api/login.php?action=verify', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(payload)
-    // });
-
     function verifyUser(PDO $pdo): void {
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
         $email = trim($input['email'] ?? '');
