@@ -34,12 +34,7 @@
         exit;
     }
 
-    function listUsers($pdo) {
-        $stmt = $pdo->query('SELECT userID, firstName, lastName, phoneNo FROM user ORDER BY userID');
-        echo json_encode(['success'=>true,'data'=>$stmt->fetchAll()]);
-    }
-
-    function addUser($pdo) {
+    function addCustomer($pdo) {
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
         $id = trim($input['customerID'] ?? '');
         $ln = trim($input['licenseNo'] ?? '');
@@ -70,31 +65,39 @@
 
     function verifyPassword($pdo) {
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
-        $id = trim($input['customerID'] ?? '');
+        $email = trim($input['email'] ?? '');
         $pass = trim($input['password'] ?? '');
 
-        if ($id === '' || $pass === '') {
+        if ($email === '' || $pass === '') {
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Customer ID and password are required.']);
             return;
         }
 
         try {
-            $stmt = $pdo->prepare('SELECT password FROM customer WHERE customerID = :id');
-            $stmt->execute([':id' => $id]);
+            // quick check to see if email belong to customer
+            $stmt = $pdo->prepare('SELECT password FROM customer WHERE email = :email');
+            $stmt->execute([':email' => $email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$user) {
-                http_response_code(404);
-                echo json_encode(['success' => false, 'verified' => false, 'error' => 'User not found.']);
+            //check if the password hash matched
+            if ($user && password_verify($pass, $user['password'])){
+                echo json_encode(['success' => true, 'role' => 'customer', 'message' => 'Customer logged in successfully.']);
                 return;
             }
 
-            if (password_verify($pass, $user['password'])) {
-                echo json_encode(['success' => true, 'verified' => true, 'message' => 'Password verified successfully.']);
-            } else {
-                echo json_encode(['success' => true, 'verified' => false, 'message' => 'Invalid password.']);
+            $stmt = $pdo->prepare('SELECT adminPassword FROM admin WHERE adminEmail = :adminEmail');
+            $stmt->execute([':adminEmail' => $email]);
+            $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($admin && password_verify($pass, $admin['adminPassword'])) {
+                echo json_encode(['success' => true, 'role' => 'admin', 'message' => 'Admin logged in successfully.']);
+                return;
             }
+
+            //if not found in both
+            http_response_code(401); // Unauthorized
+            echo json_encode(['success' => false, 'error' => 'Invalid email or password.']);
+
         } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
@@ -102,11 +105,8 @@
     }
 
     switch ($action) {
-        case 'list': 
-            listUsers($pdo); 
-            break;
         case 'add': 
-            addUser($pdo); 
+            addCustomer($pdo); 
             break;
         case 'verify':
             verifyPassword($pdo);
