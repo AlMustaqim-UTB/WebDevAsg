@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register User</title>
+</head>
+<body>
+    <pre id="out"></pre>
+
+    <h2>User Registration</h2>
+    <form id="registrationForm">
+        <!-- Common Fields -->
+        First Name: <input type="text" id="firstName" required><br>
+        Last Name: <input type="text" id="lastName" required><br>
+        Phone No: <input type="tel" id="phoneNo" required><br>
+
+        <!-- Role Selection -->
+        <input type="radio" id="roleCustomer" name="role" value="customer" checked>
+        <label for="roleCustomer">Customer</label>
+        <input type="radio" id="roleAdmin" name="role" value="admin">
+        <label for="roleAdmin">Admin</label>
+        <br><br>
+
+        <!-- Customer Specific Fields -->
+        <div id="customerFields">
+            License No: <input type="text" id="licenseNo"><br>
+        </div>
+
+        <!-- Shared and Admin Specific Fields -->
+        Email: <input type="email" id="email" required><br>
+        Password: <input type="password" id="password" required><br>
+
+        <button type="submit">Register User</button>
+    </form>
+
+    <script>
+        const out = document.getElementById('out');
+        const apiBaseUrl = 'http://localhost:8080/api/register.php';
+        // const apiBaseUrl = 'http://localhost/webdev-asg-php/src/api/indexDB.php';
+        const customerFields = document.getElementById('customerFields');
+        const roleCustomerRadio = document.getElementById('roleCustomer');
+        const roleAdminRadio = document.getElementById('roleAdmin');
+
+        async function handleFetch(url, options = {}) {
+        out.textContent = 'Loading...';
+        try {
+            const res = await fetch(url, options);
+            const text = await res.text();
+            if (!res.ok) throw new Error(text || res.statusText);
+            const json = text ? JSON.parse(text) : {};
+            out.textContent = JSON.stringify(json, null, 2);
+        } catch (err) {
+            out.textContent = 'Error: ' + err.message;
+        }
+    }
+
+        // Function to toggle visibility of role-specific fields
+        function toggleRoleFields() {
+            if (roleCustomerRadio.checked) {
+                customerFields.style.display = 'block';
+            } else {
+                customerFields.style.display = 'none';
+            }
+        }
+        // Add event listeners to radio buttons
+        roleCustomerRadio.addEventListener('change', toggleRoleFields);
+        roleAdminRadio.addEventListener('change', toggleRoleFields);
+        // Initial check on page load
+        toggleRoleFields();
+
+         // Handle new registration form submission
+        document.getElementById('registrationForm').addEventListener('submit', (event) => {
+            event.preventDefault(); // Prevent default form submission
+
+            const role = document.querySelector('input[name="role"]:checked').value;
+            
+            // Common data for both roles
+            const payload = {
+                role: role,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phoneNo: document.getElementById('phoneNo').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            // Add customer-specific data if role is customer
+            if (role === 'customer') {
+                payload.licenseNo = document.getElementById('licenseNo').value;
+            }
+
+            // The backend will receive this payload and should handle saving to the 'user' table
+            // and then to the 'customer' or 'admin' table.
+            handleFetch(`${apiBaseUrl}?action=register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        });
+    </script>
+    
+</body>
+</html>

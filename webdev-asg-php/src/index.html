@@ -6,30 +6,38 @@
     <title>Room Booking - Test</title>
 </head>
 <body>
-    <h1>Car Rental Test</h1>
-    <button id="load">Load data</button> 
-    <pre id="out"></pre>
-
-    <h2>AddUser</h2>
+    <h2>Add 2 customer table</h2>
     <div>
         <input id="customerID" type="text" placeholder="customerID" />
         <input id="licenseNo" type="text" placeholder="licenseNo" />
         <input id="email" type="text" placeholder="email" />
         <input id="password" type="password" placeholder="password" />
-        <button id="addUser">Add User</button>
+        <button id="addCustomer">Add User</button>
     </div>
 
-    <h2>VerifyPass</h2>
+    <h2>Add 2 admin table</h2>
     <div>
-        <input id="verifyCustomerID" type="text" placeholder="customerID" />
+        <input id="adminID" type="text" placeholder="adminID" />
+        <input id="adminEmail" type="text" placeholder="adminEmail" />
+        <input id="adminPassword" type="password" placeholder="adminPassword" />
+        <button id="addAdmin">Add User</button>
+    </div>
+
+    <h2>Verify Password (Customer & Admin)</h2>
+    <div>
+        <input id="verifyEmail" type="text" placeholder="email" />
         <input id="verifyPassword" type="password" placeholder="password" />
         <button id="verify">Verify</button>
     </div>
-
+    <pre id="out"></pre>
     <script>
         const out = document.getElementById('out');
         const apiBaseUrl = 'http://localhost:8080/api/indexDB.php';
         // const apiBaseUrl = 'http://localhost/webdev-asg-php/src/api/indexDB.php';
+        const customerFields = document.getElementById('customerFields');
+        const roleCustomerRadio = document.getElementById('roleCustomer');
+        const roleAdminRadio = document.getElementById('roleAdmin');
+        
 
         // Generic fetch handler to reduce repetition
         async function handleFetch(url, options = {}) {
@@ -45,13 +53,8 @@
             }
         }
 
-        //load data function basix
-        document.getElementById('load').addEventListener('click', () => {
-            handleFetch(`${apiBaseUrl}?action=list`);
-        });
-
-        //add user function
-        document.getElementById('addUser').addEventListener('click', () => {
+        //add customer function
+        document.getElementById('addCustomer').addEventListener('click', () => {
             const payload = {
                 customerID: document.getElementById('customerID').value,
                 licenseNo: document.getElementById('licenseNo').value,
@@ -65,10 +68,10 @@
             });
         });
 
-        //verify custID and pass funct
+        //verify email and password for both customer and admin
         document.getElementById('verify').addEventListener('click', () => {
             const payload = {
-                customerID: document.getElementById('verifyCustomerID').value,
+                email: document.getElementById('verifyEmail').value,
                 password: document.getElementById('verifyPassword').value
             };
             handleFetch(`${apiBaseUrl}?action=verify`, {
