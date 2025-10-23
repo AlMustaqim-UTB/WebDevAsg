@@ -41,20 +41,22 @@
 
     function addUser($pdo) {
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
-        $id = trim($input['userID'] ?? '');
-        $fn = trim($input['firstName'] ?? '');
-        $ln = trim($input['lastName'] ?? '');
-        $ph = trim($input['phoneNo'] ?? '');
-        if ($id<=0 || $fn===''||$ln===''||$ph==='') {
+        $id = trim($input['customerID'] ?? '');
+        $ln = trim($input['licenseNo'] ?? '');
+        $e = trim($input['email'] ?? '');
+        $pass = trim($input['password'] ?? '');
+        $hashedPass = password_hash($pass, PASSWORD_DEFAULT);
+
+        if ($id === '' || $ln===''||$e===''||$pass==='') {
             http_response_code(400);
             echo json_encode(['success'=>false,'error'=>'Invalid input']); 
             return;
         }
         try {
-            $sql = "INSERT INTO user (userID, firstName, lastName, phoneNo) VALUES (:id, :fn, :ln, :ph)";
+            $sql = "INSERT INTO customer (customerID, licenseNo, email, password) VALUES (:id, :ln, :e, :pass)";
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([':id'=>$id, ':fn'=>$fn,':ln'=>$ln,':ph'=>$ph]);
-            echo json_encode(['success'=>true, 'message' => 'User added successfully.']);
+            $stmt->execute([':id'=>$id, ':ln'=>$ln,':e'=>$e,':pass'=>$hashedPass]);
+            echo json_encode(['success'=>true, 'message' => 'Customer added successfully.']);
         } catch (PDOException $e) {
             http_response_code(500);
             // Catch potential duplicate key errors
@@ -66,12 +68,48 @@
         }
     }
 
+    function verifyPassword($pdo) {
+        $input = json_decode(file_get_contents('php://input'), true) ?? [];
+        $id = trim($input['customerID'] ?? '');
+        $pass = trim($input['password'] ?? '');
+
+        if ($id === '' || $pass === '') {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Customer ID and password are required.']);
+            return;
+        }
+
+        try {
+            $stmt = $pdo->prepare('SELECT password FROM customer WHERE customerID = :id');
+            $stmt->execute([':id' => $id]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'verified' => false, 'error' => 'User not found.']);
+                return;
+            }
+
+            if (password_verify($pass, $user['password'])) {
+                echo json_encode(['success' => true, 'verified' => true, 'message' => 'Password verified successfully.']);
+            } else {
+                echo json_encode(['success' => true, 'verified' => false, 'message' => 'Invalid password.']);
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     switch ($action) {
         case 'list': 
             listUsers($pdo); 
             break;
         case 'add': 
             addUser($pdo); 
+            break;
+        case 'verify':
+            verifyPassword($pdo);
             break;
         default:
             http_response_code(400);
