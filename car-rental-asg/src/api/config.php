@@ -10,7 +10,7 @@
 
 // === Docker Configuration ===
 $host = getenv('DB_HOST') ?: 'db';
-$db   = getenv('DB_NAME') ?: 'webdev_asg_db';
+$db   = getenv('DB_NAME') ?: 'car-rental-db';
 $user = getenv('DB_USER') ?: 'user1';
 $pass = getenv('DB_PASS') ?: '1234';
 
