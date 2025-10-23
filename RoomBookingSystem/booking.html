@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Booking</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/bookingStyle.css" />
+  </head>
+  <body class="bookingPage">
+    <div class="bookingWrap">
+      <main class="leftCol">
+        <section class="card">
+          <div class="cardBody">
+            <div class="carHero">
+              <img id="carImg" src="" alt="" />
+              <div>
+                <h1 class="carName" id="carName">
+                  Car Name <span class="badge" id="carClass">Class</span>
+                </h1>
+                <p class="carSpecs" id="carSpecs">
+                  • Transmission • A/C • Seats • Fuel
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="cardBody">
+            <form id="bookingForm">
+              <div class="row2">
+                <div>
+                  <label for="firstName">First name</label>
+                  <input id="firstName" required placeholder="e.g Wafri" />
+                </div>
+                <div>
+                  <label for="lastName">Last name</label>
+                  <input id="lastName" required placeholder="e.g. Hakim" />
+                </div>
+              </div>
+
+              <div class="row2">
+                <div>
+                  <label for="startDate">Start date</label>
+                  <input id="startDate" type="date" required />
+                </div>
+                <div>
+                  <label for="endDate">End date</label>
+                  <input id="endDate" type="date" required />
+                </div>
+              </div>
+
+              <div class="row1">
+                <label>Hand-over method</label>
+                <div class="radioRow">
+                  <label
+                    ><input
+                      type="radio"
+                      name="handover"
+                      id="handoverPickup"
+                      value="pickup"
+                      checked
+                    />
+                    Pick up</label
+                  >
+                  <label
+                    ><input
+                      type="radio"
+                      name="handover"
+                      id="handoverDelivery"
+                      value="delivery"
+                    />
+                    Deliver to address</label
+                  >
+                </div>
+              </div>
+
+              <div class="row1" id="deliveryGroup" hidden>
+                <label for="deliveryAddress">Delivery address</label>
+                <input
+                  id="deliveryAddress"
+                  placeholder="House/Street, Area, Postal code"
+                />
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <aside class="rightCol">
+        <section class="card payCard">
+          <div class="cardBody">
+            <h2 class="cardTitle">Price Summary</h2>
+            <div class="summaryRow">
+              <span>Price / day</span><span id="pricePerDay">B$ 0</span>
+            </div>
+            <div class="summaryRow">
+              <span>Days</span><span id="daysCount">0</span>
+            </div>
+            <hr class="divider" />
+            <div class="summaryRow total">
+              <span>Total</span><span id="totalAmount">B$ 0</span>
+            </div>
+          </div>
+
+          <div class="cardBody payBottom">
+            <h2 class="cardTitle">Payment</h2>
+            <div class="payBtns">
+              <button id="btnOnline" class="btnPrimary" type="button">
+                Pay Online
+              </button>
+              <button id="btnCash" class="btnSecondary" type="button">
+                Checkout (Cash)
+              </button>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <div id="statusModal" class="modalOverlay" hidden>
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modalTitle"
+      >
+        <button class="modalClose" id="modalClose" aria-label="Close">×</button>
+        <h3 id="modalTitle">Status</h3>
+        <p id="modalMessage">Message</p>
+        <div class="modalActions">
+          <a href="main.html">
+            <button id="modalOk" class="btnPrimary" type="button">OK</button></a
+          >
+        </div>
+      </div>
+    </div>
+    <script>
+      //ni for demo
+      const CARS = [
+        {
+          id: 1,
+          name: "Toyota Vios 1.5",
+          type: "Sedan",
+          transmission: "Automatic",
+          seats: 5,
+          fuel: "Petrol",
+          pricePerDay: 45,
+          location: "Gadong",
+          img: "css/images/toyota1.jpeg",
+          cls: "Economy",
+        },
+        {
+          id: 2,
+          name: "Honda Civic 1.8",
+          type: "Sedan",
+          transmission: "Automatic",
+          seats: 5,
+          fuel: "Petrol",
+          pricePerDay: 65,
+          location: "Kiulap",
+          img: "css/images/cars/car2.jpg",
+          cls: "Economy",
+        },
+        {
+          id: 3,
+          name: "Hyundai Ioniq 5",
+          type: "SUV",
+          transmission: "Automatic",
+          seats: 5,
+          fuel: "Electric",
+          pricePerDay: 120,
+          location: "BSB",
+          img: "css/images/cars/car3.jpg",
+          cls: "SUV",
+        },
+        {
+          id: 4,
+          name: "Perodua Bezza 1.3",
+          type: "Sedan",
+          transmission: "Automatic",
+          seats: 5,
+          fuel: "Petrol",
+          pricePerDay: 40,
+          location: "Gadong",
+          img: "css/images/cars/car4.jpg",
+          cls: "Economy",
+        },
+        {
+          id: 5,
+          name: "Toyota Avanza 1.5",
+          type: "MPV",
+          transmission: "Automatic",
+          seats: 7,
+          fuel: "Petrol",
+          pricePerDay: 80,
+          location: "Jerudong",
+          img: "css/images/cars/car5.jpg",
+          cls: "MPV",
+        },
+        {
+          id: 6,
+          name: "Ford Ranger 2.2",
+          type: "Pickup",
+          transmission: "Manual",
+          seats: 5,
+          fuel: "Diesel",
+          pricePerDay: 95,
+          location: "BSB",
+          img: "css/images/cars/car6.jpg",
+          cls: "Pickup",
+        },
+        {
+          id: 7,
+          name: "Tesla Model 3 SR",
+          type: "Sedan",
+          transmission: "Automatic",
+          seats: 5,
+          fuel: "Electric",
+          pricePerDay: 150,
+          location: "Kiulap",
+          img: "css/images/cars/car7.jpg",
+          cls: "Sedan",
+        },
+        {
+          id: 8,
+          name: "Kia Picanto 1.2",
+          type: "Hatchback",
+          transmission: "Automatic",
+          seats: 4,
+          fuel: "Petrol",
+          pricePerDay: 35,
+          location: "Gadong",
+          img: "css/images/cars/car8.jpg",
+          cls: "Economy",
+        },
+      ];
+
+      var params = new URLSearchParams(window.location.search);
+      var idFromUrl = Number(params.get("id"));
+      var car =
+        CARS.find(function (c) {
+          return c.id === idFromUrl;
+        }) || CARS[0];
+
+      document.getElementById("carImg").src = car.img;
+      document.getElementById("carImg").alt = car.name;
+      var nameEl = document.getElementById("carName");
+      nameEl.firstChild.nodeValue = car.name + " ";
+      document.getElementById("carClass").textContent = car.cls || "Class";
+      document.getElementById("carSpecs").textContent =
+        "• " +
+        car.transmission +
+        " • A/C • " +
+        car.seats +
+        " seats • " +
+        car.type;
+    </script>
+
+    <script>
+      function ymd(d) {
+        var y = d.getFullYear(),
+          m = d.getMonth() + 1,
+          day = d.getDate();
+        if (m < 10) m = "0" + m;
+        if (day < 10) day = "0" + day;
+        return y + "-" + m + "-" + day;
+      }
+      function addDays(dateInput, days) {
+        var d =
+          dateInput instanceof Date ? new Date(dateInput) : new Date(dateInput);
+        d.setDate(d.getDate() + days);
+        return ymd(d);
+      }
+
+      var startDate = document.getElementById("startDate");
+      var endDate = document.getElementById("endDate");
+
+      var today = new Date();
+      var todayStr = ymd(today);
+      var tomorrowStr = addDays(today, 1);
+
+      startDate.min = todayStr;
+      startDate.value = todayStr;
+      endDate.min = tomorrowStr;
+      endDate.value = tomorrowStr;
+
+      startDate.addEventListener("change", function () {
+        var minEnd = addDays(startDate.value, 1);
+        endDate.min = minEnd;
+        if (!endDate.value || endDate.value < minEnd) endDate.value = minEnd;
+      });
+
+      endDate.addEventListener("change", function () {
+        var minEnd = addDays(startDate.value, 1);
+        if (endDate.value < minEnd) endDate.value = minEnd;
+      });
+    </script>
+
+    <script>
+      var hoPickup = document.getElementById("handoverPickup");
+      var hoDelivery = document.getElementById("handoverDelivery");
+      var deliveryGroup = document.getElementById("deliveryGroup");
+      var deliveryAddress = document.getElementById("deliveryAddress");
+
+      function toggleDelivery() {
+        if (hoDelivery.checked) {
+          deliveryGroup.hidden = false;
+          deliveryAddress.required = true;
+        } else {
+          deliveryGroup.hidden = true;
+          deliveryAddress.required = false;
+        }
+      }
+      toggleDelivery();
+      hoPickup.addEventListener("change", toggleDelivery);
+      hoDelivery.addEventListener("change", toggleDelivery);
+    </script>
+
+    <script>
+      function fmtBND(n) {
+        return "B$ " + (Math.round(n * 100) / 100).toLocaleString();
+      }
+      function daysBetween(a, b) {
+        if (!a || !b) return 1;
+        var ms = new Date(b) - new Date(a);
+        var d = Math.ceil(ms / (24 * 60 * 60 * 1000));
+        return d < 1 ? 1 : d;
+      }
+
+      var pricePerDayEl = document.getElementById("pricePerDay");
+      var daysCountEl = document.getElementById("daysCount");
+      var totalAmountEl = document.getElementById("totalAmount");
+
+      function updateReceipt() {
+        var perDay = car.pricePerDay || 0;
+        var days = daysBetween(startDate.value, endDate.value);
+        var total = perDay * days;
+        pricePerDayEl.textContent = fmtBND(perDay);
+        daysCountEl.textContent = String(days);
+        totalAmountEl.textContent = fmtBND(total);
+      }
+      startDate.addEventListener("change", updateReceipt);
+      endDate.addEventListener("change", updateReceipt);
+      updateReceipt();
+    </script>
+
+    <script>
+      var statusModal = document.getElementById("statusModal");
+      var modalTitle = document.getElementById("modalTitle");
+      var modalMessage = document.getElementById("modalMessage");
+      var modalOk = document.getElementById("modalOk");
+      var modalClose = document.getElementById("modalClose");
+
+      function openModal(title, message) {
+        modalTitle.textContent = title || "Status";
+        modalMessage.textContent = message || "";
+        statusModal.hidden = false;
+      }
+
+      function closeModal() {
+        statusModal.hidden = true;
+      }
+
+      modalOk.addEventListener("click", closeModal);
+      modalClose.addEventListener("click", closeModal);
+      statusModal.addEventListener("click", function (e) {
+        if (e.target === statusModal) closeModal();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !statusModal.hidden) closeModal();
+      });
+
+      var form = document.getElementById("bookingForm");
+      var btnOnline = document.getElementById("btnOnline");
+      var btnCash = document.getElementById("btnCash");
+
+      function formValid() {
+        if (!form) return true;
+        if (form.checkValidity()) return true;
+        form.reportValidity();
+        return false;
+      }
+
+      btnOnline.addEventListener("click", function () {
+        if (!formValid()) return;
+        openModal(
+          "Payment successful",
+          "Thanks! You will be redirected to the main page."
+        );
+      });
+
+      btnCash.addEventListener("click", function () {
+        if (!formValid()) return;
+        openModal("Booking successful", "Payment pending (Cash at pickup).");
+      });
+    </script>
+  </body>
+</html>
