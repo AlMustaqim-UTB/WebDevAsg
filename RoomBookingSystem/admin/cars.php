@@ -1,26 +1,11 @@
 <?php
-include '../config/db.php';
+require_once '../config/db.php';
+include 'navbar.php';
 
+// Delete a car
 if (isset($_GET['delete'])) {
   $id = $_GET['delete'];
   $conn->query("DELETE FROM car WHERE carID = '$id'");
-  header("Location: cars.php");
-  exit;
-}
-
-if (isset($_POST['add_car'])) {
-  $carID = $_POST['carID'];
-  $plateNo = $_POST['plateNo'];
-  $rate = $_POST['ratePerDay'];
-  $status = $_POST['status'];
-  $model = $_POST['carModel'];
-  $year = $_POST['year'];
-  $capacity = $_POST['capacity'];
-  $trans = $_POST['transmission'];
-  $makeID = $_POST['makeID'];
-  $categoryID = $_POST['categoryID'];
-  $conn->query("INSERT INTO car (carID, plateNo, ratePerDay, status, carModel, year, capacity, transmission, description, imageURL, makeID, categoryID)
-                VALUES ('$carID','$plateNo','$rate','$status','$model','$year','$capacity','$trans','N/A','N/A','$makeID','$categoryID')");
   header("Location: cars.php");
   exit;
 }
@@ -35,18 +20,9 @@ if (isset($_POST['add_car'])) {
 </head>
 <body>
   <div class="overlay">
-    <nav>
-      <ul>
-        <li><img src="../logo.png" alt="Logo"></li>
-        <li><a href="customers.php">Customers</a></li>
-        <li><a href="cars.php" class="active">Cars</a></li>
-        <li><a href="rentals.php">Rentals</a></li>
-      </ul>
-    </nav>
-
     <main>
       <h1>Cars</h1>
-      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Car</button>
+      <p>View, add, or delete cars below.</p>
 
       <div class="table-container">
         <table>
@@ -78,37 +54,15 @@ if (isset($_POST['add_car'])) {
               <td><?= $row['year'] ?></td>
               <td><?= $row['ratePerDay'] ?></td>
               <td><?= $row['status'] ?></td>
-              <td><a href="cars.php?delete=<?= $row['carID'] ?>" class="delete-btn" onclick="return confirm('Delete this car?')">Delete</a></td>
+              <td>
+                <a href="cars.php?delete=<?= $row['carID'] ?>" class="delete-btn" onclick="return confirm('Delete this car?')">Delete</a>
+              </td>
             </tr>
             <?php endwhile; ?>
           </tbody>
         </table>
       </div>
     </main>
-  </div>
-
-  <!-- Modal -->
-  <div id="addModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
-      <h2>Add New Car</h2>
-      <form method="POST">
-        <input type="text" name="carID" placeholder="Car ID (e.g. CI004)" required>
-        <input type="text" name="plateNo" placeholder="Plate No" required>
-        <input type="number" name="ratePerDay" placeholder="Rate/Day" required>
-        <input type="text" name="carModel" placeholder="Car Model" required>
-        <input type="number" name="year" placeholder="Year" required>
-        <input type="number" name="capacity" placeholder="Capacity" required>
-        <input type="text" name="transmission" placeholder="Transmission" required>
-        <input type="text" name="makeID" placeholder="Make ID (e.g. CM01)" required>
-        <input type="text" name="categoryID" placeholder="Category ID (e.g. CT01)" required>
-        <select name="status">
-          <option value="Available">Available</option>
-          <option value="Rented">Rented</option>
-        </select>
-        <button type="submit" name="add_car">Add Car</button>
-      </form>
-    </div>
   </div>
 </body>
 </html>

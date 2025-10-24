@@ -1,54 +1,117 @@
 <?php
-include '../config/db.php';
+include 'navbar.php'; // navbar
+require_once '../config/db.php'; // make sure path is correct
 
+// Delete rental
 if (isset($_GET['delete'])) {
-  $id = $_GET['delete'];
-  $conn->query("DELETE FROM rentalID WHERE rentalID = '$id'");
+  $rentalID = $_GET['delete'];
+  $conn->query("DELETE FROM rentalID WHERE rentalID = '$rentalID'");
   header("Location: rentals.php");
-  exit;
+  exit();
 }
 
-if (isset($_POST['add_rental'])) {
+// Update rental status
+if (isset($_POST['update_status'])) {
   $rentalID = $_POST['rentalID'];
-  $customerID = $_POST['customerID'];
-  $carID = $_POST['carID'];
-  $startDate = $_POST['startDate'];
-  $endDate = $_POST['endDate'];
-  $totalPrice = $_POST['totalPrice'];
-  $status = $_POST['rentalStatus'];
-  $paymentID = $_POST['paymentID'];
-  $location = $_POST['deliveryLocation'];
-
-  $conn->query("INSERT INTO rentalID (rentalID, customerID, carID, startDate, endDate, totalPrice, rentalStatus, paymentID, deliveryLocation)
-                VALUES ('$rentalID','$customerID','$carID','$startDate','$endDate','$totalPrice','$status','$paymentID','$location')");
+  $newStatus = $_POST['newStatus'];
+  $conn->query("UPDATE rentalID SET rentalStatus = '$newStatus' WHERE rentalID = '$rentalID'");
   header("Location: rentals.php");
-  exit;
+  exit();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin - Rentals</title>
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin.css" />
+  <style>
+    /* Inline fix to make sure dropdowns and buttons align and color properly */
+    select[name="newStatus"] {
+      min-width: 120px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      border: 1px solid #ccc;
+      color: white;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* Color classes */
+    .pending { background-color: #f4b400; color: black; }
+    .active { background-color: #4285f4; color: white; }
+    .completed { background-color: #0f9d58; color: white; }
+
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .change-btn {
+      background: #0a9396;
+      color: #fff;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .change-btn:hover { background: #078082; }
+
+    .delete-btn {
+      background: #c0392b;
+      color: #fff;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.3s ease;
+    }
+
+    .delete-btn:hover { background: #a93226; }
+
+    /* Legend styling */
+    .status-legend {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .legend-box {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      margin-right: 6px;
+    }
+  </style>
 </head>
+
 <body>
   <div class="overlay">
-    <nav>
-      <ul>
-        <li><img src="../logo.png" alt="Logo"></li>
-        <li><a href="customers.php">Customers</a></li>
-        <li><a href="cars.php">Cars</a></li>
-        <li><a href="rentals.php" class="active">Rentals</a></li>
-      </ul>
-    </nav>
+
 
     <main>
       <h1>Rentals</h1>
       <p>View and manage all car rental records below.</p>
 
-      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Rental</button>
+      <!-- Status Legend -->
+      <div class="status-legend">
+        <div><span class="legend-box" style="background:#f4b400;"></span> Pending</div>
+        <div><span class="legend-box" style="background:#4285f4;"></span> Active</div>
+        <div><span class="legend-box" style="background:#0f9d58;"></span> Completed</div>
+      </div>
 
       <div class="table-container">
         <table>
@@ -69,19 +132,31 @@ if (isset($_POST['add_rental'])) {
             <?php
             $query = "SELECT * FROM rentalID";
             $result = $conn->query($query);
+
             while ($row = $result->fetch_assoc()):
             ?>
             <tr>
-              <td><?= $row['rentalID'] ?></td>
-              <td><?= $row['customerID'] ?></td>
-              <td><?= $row['carID'] ?></td>
-              <td><?= $row['startDate'] ?></td>
-              <td><?= $row['endDate'] ?></td>
-              <td><?= $row['totalPrice'] ?></td>
-              <td><?= $row['rentalStatus'] ?></td>
-              <td><?= $row['deliveryLocation'] ?></td>
+              <td><?= htmlspecialchars($row['rentalID']) ?></td>
+              <td><?= htmlspecialchars($row['customerID']) ?></td>
+              <td><?= htmlspecialchars($row['carID']) ?></td>
+              <td><?= htmlspecialchars($row['startDate']) ?></td>
+              <td><?= htmlspecialchars($row['endDate']) ?></td>
+              <td><?= htmlspecialchars($row['totalPrice']) ?></td>
+              <td><?= htmlspecialchars($row['rentalStatus']) ?></td>
+              <td><?= htmlspecialchars($row['deliveryLocation']) ?></td>
               <td>
-                <a href="rentals.php?delete=<?= $row['rentalID'] ?>" class="delete-btn" onclick="return confirm('Delete this rental?')">Delete</a>
+                <div class="action-buttons">
+                  <form method="POST">
+                    <input type="hidden" name="rentalID" value="<?= $row['rentalID'] ?>">
+                    <select name="newStatus" class="<?= strtolower($row['rentalStatus']) ?>">
+                      <option value="Pending" <?= ($row['rentalStatus'] == 'Pending') ? 'selected' : '' ?>>Pending</option>
+                      <option value="Active" <?= ($row['rentalStatus'] == 'Active') ? 'selected' : '' ?>>Active</option>
+                      <option value="Completed" <?= ($row['rentalStatus'] == 'Completed') ? 'selected' : '' ?>>Completed</option>
+                    </select>
+                    <button type="submit" name="update_status" class="change-btn">Change</button>
+                  </form>
+                  <a href="rentals.php?delete=<?= $row['rentalID'] ?>" class="delete-btn" onclick="return confirm('Delete this rental?')">Delete</a>
+                </div>
               </td>
             </tr>
             <?php endwhile; ?>
@@ -91,29 +166,22 @@ if (isset($_POST['add_rental'])) {
     </main>
   </div>
 
-  <!-- Modal -->
-  <div id="addModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
-      <h2>Add New Rental</h2>
-      <form method="POST">
-        <input type="text" name="rentalID" placeholder="Rental ID (e.g. RI005)" required>
-        <input type="text" name="customerID" placeholder="Customer ID (e.g. CU00001)" required>
-        <input type="text" name="carID" placeholder="Car ID (e.g. CI001)" required>
-        <input type="date" name="startDate" required>
-        <input type="date" name="endDate" required>
-        <input type="number" step="0.01" name="totalPrice" placeholder="Total Price" required>
-        <select name="rentalStatus">
-          <option value="Pending">Pending</option>
-          <option value="Active">Active</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </select>
-        <input type="text" name="paymentID" placeholder="Payment ID (e.g. PI004)" required>
-        <input type="text" name="deliveryLocation" placeholder="Delivery Location" required>
-        <button type="submit" name="add_rental">Add Rental</button>
-      </form>
-    </div>
-  </div>
+  <!-- JavaScript to recolor dropdowns when changed -->
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const dropdowns = document.querySelectorAll('select[name="newStatus"]');
+
+    function updateColors() {
+      dropdowns.forEach(select => {
+        select.classList.remove('pending', 'active', 'completed');
+        const val = select.value.toLowerCase();
+        select.classList.add(val);
+      });
+    }
+
+    updateColors();
+    dropdowns.forEach(select => select.addEventListener('change', updateColors));
+  });
+  </script>
 </body>
 </html>
