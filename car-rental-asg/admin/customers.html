@@ -41,55 +41,76 @@ if (isset($_POST['add_customer'])) {
 
     <main>
       <h1>Customers</h1>
-      <p>View, add, or remove customers below.</p>
+      <p>View, or remove customers below.</p>
 
-      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Customer</button>
-
-      <div class="table-container">
+    <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>Customer ID</th>
               <th>License No</th>
               <th>Email</th>
-              <th>Password</th>
+              <th>Phone No</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-            <?php
-            $result = $conn->query("SELECT * FROM customer");
-            while ($row = $result->fetch_assoc()):
-            ?>
-            <tr>
-              <td><?= $row['customerID'] ?></td>
-              <td><?= $row['licenseNo'] ?></td>
-              <td><?= $row['email'] ?></td>
-              <td><?= $row['password'] ?></td>
-              <td>
-                <a href="customers.php?delete=<?= $row['customerID'] ?>" class="delete-btn" onclick="return confirm('Delete this customer?')">Delete</a>
-              </td>
-            </tr>
-            <?php endwhile; ?>
+          <tbody id="customerRows">
           </tbody>
         </table>
+        <p id="customersMessage" class="message"></p>
       </div>
     </main>
   </div>
 
-  <!-- Modal -->
-  <div id="addModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
-      <h2>Add New Customer</h2>
-      <form method="POST">
-        <input type="text" name="customerID" placeholder="Customer ID (e.g. CU00004)" required>
-        <input type="text" name="licenseNo" placeholder="License No" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="text" name="password" placeholder="Password" required>
-        <button type="submit" name="add_customer">Add</button>
-      </form>
-    </div>
-  </div>
+  <script>
+    const apiBaseUrl = 'http://localhost:8080/api/adminCustomer.php';
+    const tbody = document.getElementById('customerRows');
+    const message = document.getElementById('customersMessage');
+
+    async function loadCustomers() {
+      message.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load customers.');
+
+        tbody.innerHTML = data.customers.map(c => `
+          <tr>
+            <td>${c.customerID}</td>
+            <td>${c.licenseNo}</td>
+            <td>${c.email}</td>
+            <td>${c.phoneNo}</td>
+            <td><button class="delete-btn" data-id="${c.customerID}">Delete</button></td>
+          </tr>
+        `).join('');
+
+        message.textContent = data.customers.length ? '' : 'No customers found.';
+      } catch (err) {
+        message.textContent = err.message;
+        tbody.innerHTML = '';
+      }
+    }
+    tbody.addEventListener('click', async (event) => {
+      if (!event.target.matches('.delete-btn')) return;
+
+      const customerId = event.target.dataset.id;
+      if (!confirm(`Delete customer ${customerId}?`)) return;
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerID: customerId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed.');
+        await loadCustomers();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    loadCustomers();
+  </script>
 </body>
 </html>
