@@ -1,21 +1,11 @@
 <?php
-include '../config/db.php';
+require_once '../config/db.php';
+include 'navbar.php';
 
-// Delete customer
+// Delete a customer
 if (isset($_GET['delete'])) {
   $id = $_GET['delete'];
   $conn->query("DELETE FROM customer WHERE customerID = '$id'");
-  header("Location: customers.php");
-  exit;
-}
-
-// Add new customer
-if (isset($_POST['add_customer'])) {
-  $id = $_POST['customerID'];
-  $license = $_POST['licenseNo'];
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-  $conn->query("INSERT INTO customer (customerID, licenseNo, email, password) VALUES ('$id','$license','$email','$password')");
   header("Location: customers.php");
   exit;
 }
@@ -30,20 +20,9 @@ if (isset($_POST['add_customer'])) {
 </head>
 <body>
   <div class="overlay">
-    <nav>
-      <ul>
-        <li><img src="../logo.png" alt="Logo"></li>
-        <li><a href="customers.php" class="active">Customers</a></li>
-        <li><a href="cars.php">Cars</a></li>
-        <li><a href="rentals.php">Rentals</a></li>
-      </ul>
-    </nav>
-
     <main>
       <h1>Customers</h1>
-      <p>View, add, or remove customers below.</p>
-
-      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Customer</button>
+      <p>View and manage customer accounts below.</p>
 
       <div class="table-container">
         <table>
@@ -75,21 +54,6 @@ if (isset($_POST['add_customer'])) {
         </table>
       </div>
     </main>
-  </div>
-
-  <!-- Modal -->
-  <div id="addModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
-      <h2>Add New Customer</h2>
-      <form method="POST">
-        <input type="text" name="customerID" placeholder="Customer ID (e.g. CU00004)" required>
-        <input type="text" name="licenseNo" placeholder="License No" required>
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="text" name="password" placeholder="Password" required>
-        <button type="submit" name="add_customer">Add</button>
-      </form>
-    </div>
   </div>
 </body>
 </html>
