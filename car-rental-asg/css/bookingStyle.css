@@ -1,0 +1,68 @@
+/* ==== BOOKING PAGE ONLY (Step 1) ==== */
+
+/* small top bar */
+.pageBar{
+  background:#0f3557; color:#fff; padding:14px 18px; font-weight:700; letter-spacing:.5px;
+}
+.pageBar__title{ font-size:18px; }
+
+/* layout */
+.bookingWrap{
+  max-width:1100px; margin:18px auto 40px; padding:0 16px;
+  display:grid; grid-template-columns: 1fr 320px; gap:18px;
+  position:relative; z-index:2; /* sits above your dark overlay */
+}
+.leftCol{ display:grid; gap:14px; }
+.rightCol{ display:grid; gap:14px; }
+
+/* card */
+.card{
+  background:#fff; color:#0f172a; border:1px solid #e5e7eb; border-radius:12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.25);
+}
+.cardBody{ padding:16px 18px; }
+
+/* car details */
+.carHero{ display:grid; grid-template-columns: 240px 1fr; gap:16px; align-items:center; }
+.carHero img{ width:100%; height:160px; object-fit:cover; border-radius:10px; }
+.carName{ margin:0 0 6px; font-size:24px; font-weight:800; }
+.badge{ display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; background:#e6f6f7; color:#0a9396; font-weight:700; margin-left:8px; }
+.carSpecs{ color:#334155; font-size:14px; margin:0 0 6px; }
+
+/* responsive */
+@media (max-width: 992px){
+  .bookingWrap{ grid-template-columns: 1fr; }
+  .carHero{ grid-template-columns: 1fr; }
+}
+
+/* --- Step 2: form styles --- */
+.cardHeader{ padding:14px 18px; border-bottom:1px solid #e5e7eb; font-weight:800; }
+
+.formGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+.formGrid .full{ grid-column: 1 / -1; }
+
+label{ font-size:13px; color:#0a2a66; font-weight:700; display:block; margin:8px 0 6px; }
+input, select{
+  width:100%; padding:10px 12px; border-radius:8px; border:1px solid #cbd5e1;
+  font-size:14px; background:#fff; box-sizing:border-box;
+}
+
+.handoverRow{ display:flex; gap:18px; align-items:center; }
+.radio{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; }
+
+#deliveryGroup[hidden]{ display:none !important; }
+
+.btnPrimary{
+  width:100%; padding:12px; border:0; border-radius:8px;
+  background:#0a9396; color:#fff; font-weight:800; cursor:pointer;
+}
+.btnPrimary:hover{ filter:brightness(1.05); }
+
+/* responsive */
+@media (max-width: 992px){
+  .formGrid{ grid-template-columns: 1fr; }
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ - Car Rentals</title>
+
+  <!-- Fonts and Main Styles -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/faqStyle.css" />
+
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="css/images/logo.png" alt="Logo"></li>
+        <li><a href="main.html">Home</a></li>
+        <li><a href="">My Bookings</a></li>
+        <li><a href="faq.html" class="active"><u>FAQ</u></a></li>
+        <li><a href="">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h1>Frequently Asked Questions</h1>
+      <div class="faq-container">
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>How do I book a car?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            Browse available cars on our “Cars” page, choose your preferred vehicle, and click “Book Now.” Fill in your pickup details, confirm your booking, and you’re all set!
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Can I modify or cancel a booking?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            Yes, you can manage your bookings in the “My Bookings” section. Depending on the policy, cancellation or modification fees may apply.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>What documents are required to rent a car?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            You’ll need a valid driver’s license, an ID (passport or national ID), and a valid payment method. International renters may need an International Driving Permit (IDP).
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Is delivery and pickup service available?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            Yes, we provide flexible delivery options. You can meet the host at a pickup location or have the vehicle delivered to your preferred address for an additional fee.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>Do I need to pay a deposit?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            A refundable security deposit may be required based on the car type. It will be refunded upon safe return of the vehicle.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question">
+            <span>What happens if I return the car late?</span>
+            <span class="faq-toggle">+</span>
+          </div>
+          <div class="faq-answer">
+            Late returns may result in extra charges. Please contact us early if you expect a delay so we can make the necessary arrangements.
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        For more information, contact us at
+        <a href="mailto:RentalCars@example.com">RentalCars@example.com</a>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const faqItems = document.querySelectorAll(".faq-item");
+
+    faqItems.forEach(item => {
+      const question = item.querySelector(".faq-question");
+      question.addEventListener("click", () => {
+        item.classList.toggle("active");
+      });
+    });
+  </script>
+</body>
+</html>

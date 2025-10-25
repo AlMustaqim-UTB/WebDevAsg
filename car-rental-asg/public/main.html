@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+
+    <style></style>
+  </head>
+  <body>
+      <nav>
+        <ul>
+          <li><img src="../css/images/logo.png" alt="" /></li>
+          <li>
+            <a href=""><u>Home</u></a>
+          </li>
+          <li><a href="">My Bookings</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="login.html">Logout</a></li>
+        </ul>
+      </nav>
+
+  <div class="main">
+    <section id="carSearch">
+      <h1 id="carSearchHeader">Find a Rental Car</h1>
+
+      <div class="searchBar">
+        <label class="nameLabel" for="nameSearch">Search by car name</label>
+        <input id="nameSearch" type="search" placeholder="Search by car name">
+        <button id="searchBtn" type="button">Search</button>
+      </div>
+
+      
+<form id="filtersForm" class="filtersPanel" onsubmit="return false">
+  <div class="filterField">
+    <label for="locationSelect">Location</label>
+    <select id="locationSelect">
+      <option value="">Anywhere</option>
+      <option>Gadong</option><option>Kiulap</option>
+      <option>Jerudong</option><option>BSB</option>
+    </select>
+  </div>
+
+  <div class="filterField">
+    <label for="typeSelect">Body type</label>
+    <select id="typeSelect">
+      <option value="">Any</option>
+      <option>Sedan</option><option>SUV</option>
+      <option>Hatchback</option><option>Pickup</option><option>MPV</option>
+    </select>
+  </div>
+
+  <div class="filterField">
+    <label for="transmissionSelect">Transmission</label>
+    <select id="transmissionSelect">
+      <option value="">Any</option>
+      <option>Automatic</option><option>Manual</option>
+    </select>
+  </div>
+
+  <div class="filterField">
+    <label for="seatsSelect">Seats (min)</label>
+    <select id="seatsSelect">
+      <option value="">Any</option>
+      <option value="4">4+</option><option value="5">5+</option><option value="7">7+</option>
+    </select>
+  </div>
+
+  <div class="filterField">
+    <label for="fuelSelect">Fuel</label>
+    <select id="fuelSelect">
+      <option value="">Any</option>
+      <option>Petrol</option><option>Diesel</option>
+      <option>Hybrid</option><option>Electric</option>
+    </select>
+  </div>
+
+  <div class="filterField">
+    <label for="maxPriceInput">Max price / day (B$)</label>
+    <input id="maxPriceInput" type="number" min="0" step="1" placeholder="e.g. 60">
+  </div>
+
+  <div class="filterField">
+    <label for="sortSelect">Sort</label>
+    <select id="sortSelect">
+      <option value="">Relevance</option>
+      <option value="price-asc">Price/day: Low → High</option>
+      <option value="price-desc">Price/day: High → Low</option>
+      <option value="name-asc">Name: A → Z</option>
+      <option value="name-desc">Name: Z → A</option>
+    </select>
+  </div>
+
+  <div class="filtersActions">
+    <button type="button" id="applyBtn" class="actionBtn">Apply</button>
+    <button type="reset"  id="resetBtn" class="actionBtn actionBtn--dark">Reset</button>
+  </div>
+</form>
+
+<div id="results" class="carResults">
+  <!-- Cards will be injected here by JS in the next step -->
+</div>
+
+    </section>
+  </div>
+  
+  <script>
+// --- Demo inventory (swap with your real data later) ---
+const CARS = [
+  { id:1, name:'Toyota Vios 1.5',   type:'Sedan',    transmission:'Automatic', seats:5, fuel:'Petrol',   pricePerDay:45,  location:'Gadong',  img:'css/images/cars/car1.jpg' },
+  { id:2, name:'Honda Civic 1.8',   type:'Sedan',    transmission:'Automatic', seats:5, fuel:'Petrol',   pricePerDay:65,  location:'Kiulap',  img:'css/images/cars/car2.jpg' },
+  { id:3, name:'Hyundai Ioniq 5',   type:'SUV',      transmission:'Automatic', seats:5, fuel:'Electric', pricePerDay:120, location:'BSB',     img:'css/images/cars/car3.jpg' },
+  { id:4, name:'Perodua Bezza 1.3', type:'Sedan',    transmission:'Automatic', seats:5, fuel:'Petrol',   pricePerDay:40,  location:'Gadong',  img:'css/images/cars/car4.jpg' },
+  { id:5, name:'Toyota Avanza 1.5', type:'MPV',      transmission:'Automatic', seats:7, fuel:'Petrol',   pricePerDay:80,  location:'Jerudong',img:'css/images/cars/car5.jpg' },
+  { id:6, name:'Ford Ranger 2.2',   type:'Pickup',   transmission:'Manual',    seats:5, fuel:'Diesel',   pricePerDay:95,  location:'BSB',     img:'css/images/cars/car6.jpg' },
+  { id:7, name:'Tesla Model 3 SR',  type:'Sedan',    transmission:'Automatic', seats:5, fuel:'Electric', pricePerDay:150, location:'Kiulap',  img:'css/images/cars/car7.jpg' },
+  { id:8, name:'Kia Picanto 1.2',   type:'Hatchback',transmission:'Automatic', seats:4, fuel:'Petrol',   pricePerDay:35,  location:'Gadong',  img:'css/images/cars/car8.jpg' },
+];
+
+// --- Helpers ---
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+// Render cards into #results (.carResults)
+function render(list){
+  $('#results').innerHTML = list.map(c => `
+    <a class="carLink" href="booking.html?id=${encodeURIComponent(c.id)}" aria-label="Book ${c.name}">
+      <article class="carCard">
+        <img src="${c.img}" alt="${c.name}">
+        <div class="carBody">
+          <h3 class="carTitle">${c.name}</h3>
+          <p class="carMeta">${c.type} · ${c.transmission} · ${c.seats} seats · ${c.fuel} · ${c.location}</p>
+          <div class="carPrice">B$ ${c.pricePerDay.toLocaleString()} / day</div>
+        </div>
+      </article>
+    </a>
+  `).join('');
+}
+
+
+// Apply filters + name search
+function applyFilters(){
+  const qName = $('#nameSearch')?.value.trim().toLowerCase() || '';
+  const loc   = $('#locationSelect')?.value || '';
+  const type  = $('#typeSelect')?.value || '';
+  const trans = $('#transmissionSelect')?.value || '';
+  const seats = parseInt($('#seatsSelect')?.value || '0', 10);
+  const fuel  = $('#fuelSelect')?.value || '';
+  const maxP  = parseInt($('#maxPriceInput')?.value || '0', 10);
+  const sort  = $('#sortSelect')?.value || '';
+
+  let list = CARS.filter(c => {
+    if (qName && !c.name.toLowerCase().includes(qName)) return false;  // name-only search
+    if (loc   && c.location !== loc) return false;
+    if (type  && c.type !== type) return false;
+    if (trans && c.transmission !== trans) return false;
+    if (seats && c.seats < seats) return false;
+    if (fuel  && c.fuel !== fuel) return false;
+    if (maxP  && c.pricePerDay > maxP) return false;
+    return true;
+  });
+
+  switch (sort){
+    case 'price-asc':  list.sort((a,b)=> a.pricePerDay - b.pricePerDay); break;
+    case 'price-desc': list.sort((a,b)=> b.pricePerDay - a.pricePerDay); break;
+    case 'name-asc':   list.sort((a,b)=> a.name.localeCompare(b.name));  break;
+    case 'name-desc':  list.sort((a,b)=> b.name.localeCompare(a.name));  break;
+  }
+
+  render(list);
+}
+
+// Wire up buttons/inputs (match your HTML IDs)
+$('#searchBtn')?.addEventListener('click', applyFilters);
+$('#nameSearch')?.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); applyFilters(); }});
+$('#applyBtn')?.addEventListener('click', applyFilters);
+
+// Reset: native reset + clear the top search + re-render all
+const form = document.getElementById('filtersForm');
+form?.addEventListener('reset', () => {
+  setTimeout(() => {
+    const nameInput = document.getElementById('nameSearch');
+    if (nameInput) nameInput.value = '';
+    render(CARS);
+  }, 0);
+});
+
+// Optional: live update when selects/inputs change
+$$('#filtersForm input, #filtersForm select').forEach(el => el.addEventListener('change', applyFilters));
+
+// Initial render
+render(CARS);
+</script>
+
+  </body>
+</html>
