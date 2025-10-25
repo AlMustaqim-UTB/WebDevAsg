@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>My Bookings</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="css/myBookings.css"/>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><img src="css/images/logo.png" alt=""></li>
+      <li><a href="main.html">Home</a></li>
+      <li><a href="mybookings.html"><u>My Bookings</u></a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="login.html">Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="bookingsWrap">
+    <h1 class="pageTitle">My Bookings</h1>
+
+    <section class="panel">
+      <header class="panelHead">
+        <h2>Active bookings</h2>
+        <span class="countBadge">2</span> <!-- TODO (PHP): echo active count -->
+      </header>
+
+      <div class="cards">
+        <!-- //loop card ini oke -->
+        <article class="card bCard">
+          <img class="bImg" src="css/images/car2.jpg" alt="Honda Civic 1.8">
+          <div class="bBody">
+            <div class="bTop">
+              <h3 class="bTitle">Honda Civic 1.8</h3>
+              <span class="bTag tag-now">Ongoing</span>
+            </div>
+            <p class="bMeta">2025-10-25 → 2025-10-27 · 2 days · Pick up</p>
+            <div class="bBottom">
+              <div class="bPrice">
+                <span>Total</span>
+                <strong>B$ 130</strong>
+              </div>
+              <div class="bActions">
+                <a class="btnGhost" href="booking.html?id=2">View</a>
+                <button class="btnDanger" type="button">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card bCard">
+          <img class="bImg" src="css/images/car5.jpg" alt="Toyota Avanza 1.5">
+          <div class="bBody">
+            <div class="bTop">
+              <h3 class="bTitle">Toyota Avanza 1.5</h3>
+              <span class="bTag tag-upcoming">Upcoming</span>
+            </div>
+            <p class="bMeta">2025-11-01 → 2025-11-03 · 2 days · Delivery</p>
+            <p class="bAddr">Address: No. 12, Jalan ABC, Kiulap</p>
+            <div class="bBottom">
+              <div class="bPrice">
+                <span>Total</span>
+                <strong>B$ 160</strong>
+              </div>
+              <div class="bActions">
+                <a class="btnGhost" href="booking.html?id=5">View</a>
+                <button class="btnDanger" type="button">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panelHead">
+        <h2>Past bookings</h2>
+        <span class="countBadge">2</span> <!-- TODO (PHP): echo past count -->
+      </header>
+
+      <div class="cards">
+        <article class="card bCard">
+          <img class="bImg" src="css/images/toyota1.jpeg" alt="Toyota Vios 1.5">
+          <div class="bBody">
+            <div class="bTop">
+              <h3 class="bTitle">Toyota Vios 1.5</h3>
+              <span class="bTag tag-done">Completed</span>
+            </div>
+            <p class="bMeta">2025-09-10 → 2025-09-12 · 2 days · Delivery</p>
+            <div class="bBottom">
+              <div class="bPrice">
+                <span>Total</span>
+                <strong>B$ 90</strong>
+              </div>
+              <div class="bActions">
+                <a class="btnGhost" href="booking.html?id=1">Book Again</a>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card bCard">
+          <img class="bImg" src="css/images/car6.jpeg" alt="Ford Ranger 2.2">
+          <div class="bBody">
+            <div class="bTop">
+              <h3 class="bTitle">Ford Ranger 2.2</h3>
+              <span class="bTag tag-cancel">Canceled</span>
+            </div>
+            <p class="bMeta">2025-08-02 → 2025-08-05 · 3 days · Pick up</p>
+            <div class="bBottom">
+              <div class="bPrice">
+                <span>Total</span>
+                <strong>B$ 285</strong>
+              </div>
+              <div class="bActions">
+                <a class="btnGhost" href="booking.html?id=6">Book Again</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
