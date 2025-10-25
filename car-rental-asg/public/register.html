@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link rel="stylesheet" type="text/css" href="../css/registerStyle.css">
+</head>
+<body >
+  <div class="overlay">
+    <div class="card" role="form" aria-labelledby="register-title">
+        <div class="logoBrand"><img src="../css/images/logo.png" alt=""></div>
+      <div class="brand">
+        <h1 id="register-title">Register</h1>
+        <p class="sub">Fill in the details below to register</p>
+      </div>
+
+      <form id="registerForm">
+        <div class="field">
+          <label for="fName">First Name</label>
+          <input id="fName" name="firstName" type="text" placeholder="Enter First Name" required />
+        </div>
+        <div class="field">
+          <label for="lName">Last Name</label>
+          <input id="lName" name="lastName" type="text" placeholder="Enter Last Name" required />
+        </div>
+        <div class="field">
+          <label for="pNum">Phone Number</label>
+          <input id="pNum" name="phoneNum" type="text" placeholder="Enter Phone Number" required />
+        </div>
+        <div class="field">
+          <label for="license">License Number</label>
+          <input id="license" name="license" type="text" placeholder="Enter License Number" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required/>
+        </div>
+        <button class="btn" type="submit">Register</button>
+      </form>
+      <div id="registerMessage" class="message" aria-live="polite"></div>
+    </div>
+  </div>
+  <script>
+    const apiBaseUrl = 'http://localhost:8080/api/register.php';
+    const form = document.getElementById('registerForm');
+    const msgRegister = document.getElementById('registerMessage');
+
+    async function handleFetch(url, options = {}) {
+        msgRegister.textContent = 'Processing...';
+        try {
+            const response = await fetch(url, options);
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                msgRegister.textContent = 'Error: ' + (data.error || 'An unknown error occurred.');
+            } else {
+                console.log('Success:', data.message);
+                alert('Registration successful! You will now be redirected to the login page.');
+                window.location.href = 'login.html';
+            }
+        } catch (error) {
+            // This catches network errors (e.g., server is down)
+            msgRegister.textContent = 'Could not connect to the server. Please try again later.';
+        }
+    }
+
+    form.addEventListener('submit', async (event) =>{
+      event.preventDefault();
+
+      const payload = {
+        firstName: document.getElementById('fName').value,
+        lastName: document.getElementById('lName').value,
+        phoneNumber: document.getElementById('pNum').value,
+        license: document.getElementById('license').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      };
+
+      handleFetch(`${apiBaseUrl}?action=register`,{
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+    });
+  </script>
+</body>
+</html>
