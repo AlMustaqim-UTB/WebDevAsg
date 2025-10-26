@@ -31,43 +31,40 @@
         exit;
     }
 
-    function listCustomers(PDO $pdo): void {
-        $listCustomerStmt = $pdo->query(
-            "SELECT c.customerID, c.licenseNo, c.email, u.phoneNo
-            FROM customer c
-            JOIN user u ON u.userID = c.customerID
-            ORDER BY c.customerID"
+    function listCars(PDO $pdo): void {
+        $listCarStmt = $pdo->query(
+            "SELECT cr.carID, cr.plateNo, cr.carModel, cm.makeName, cr.year, cr.capacity, cr.transmission, cr.ratePerDay, cr.status
+            FROM car cr
+            JOIN carMake cm ON cm.makeID = cr.makeID
+            ORDER BY cm.makeName, cr.carModel"
         );
-        echo json_encode(['success' => true, 'customers' => $listCustomerStmt->fetchAll(PDO::FETCH_ASSOC)]);
+        echo json_encode(['success' => true, 'cars' => $listCarStmt->fetchAll(PDO::FETCH_ASSOC)]);
     }
 
-    function deleteCustomer(PDO $pdo): void {
+    function deleteCars(PDO $pdo): void {
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
-        $customerId = trim($input['customerID'] ?? ($_REQUEST['customerID'] ?? ''));
+        $carId = trim($input['carID'] ?? ($_REQUEST['carID'] ?? ''));
 
         $pdo->beginTransaction();
         try {
-            $stmtCustomer = $pdo->prepare('DELETE FROM customer WHERE customerID = :id');
-            $stmtCustomer->execute([':id' => $customerId]);
-
-            $stmtUser = $pdo->prepare('DELETE FROM user WHERE userID = :id');
-            $stmtUser->execute([':id' => $customerId]);
+            $stmtCar = $pdo->prepare('DELETE FROM car WHERE carID = :carId');
+            $stmtCar->execute([':carId' => $carId]);
 
             $pdo->commit();
-            echo json_encode(['success' => true, 'message' => 'Customer deleted.']);
+            echo json_encode(['success' => true, 'message' => 'Car deleted.']);
         } catch (Exception $e) {
             $pdo->rollBack();
             http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Unable to delete customer.']);
+            echo json_encode(['success' => false, 'error' => 'Unable to delete Car.']);
         }
     }
 
     switch ($action) {
         case 'list':
-            listCustomers($pdo);
+            listCars($pdo);
             break;
         case 'delete':
-            deleteCustomer($pdo);
+            deleteCars($pdo);
             break;
         default:
             http_response_code(400);

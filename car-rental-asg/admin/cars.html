@@ -1,30 +1,3 @@
-<!-- <?php
-include '../config/db.php';
-
-if (isset($_GET['delete'])) {
-  $id = $_GET['delete'];
-  $conn->query("DELETE FROM car WHERE carID = '$id'");
-  header("Location: cars.php");
-  exit;
-}
-
-if (isset($_POST['add_car'])) {
-  $carID = $_POST['carID'];
-  $plateNo = $_POST['plateNo'];
-  $rate = $_POST['ratePerDay'];
-  $status = $_POST['status'];
-  $model = $_POST['carModel'];
-  $year = $_POST['year'];
-  $capacity = $_POST['capacity'];
-  $trans = $_POST['transmission'];
-  $makeID = $_POST['makeID'];
-  $categoryID = $_POST['categoryID'];
-  $conn->query("INSERT INTO car (carID, plateNo, ratePerDay, status, carModel, year, capacity, transmission, description, imageURL, makeID, categoryID)
-                VALUES ('$carID','$plateNo','$rate','$status','$model','$year','$capacity','$trans','N/A','N/A','$makeID','$categoryID')");
-  header("Location: cars.php");
-  exit;
-}
-?> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,32 +30,16 @@ if (isset($_POST['add_car'])) {
               <th>Model</th>
               <th>Make</th>
               <th>Year</th>
+              <th>Capacity</th>
+              <th>Transmission</th>
               <th>Rate/Day</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-            <?php
-            $query = "SELECT car.carID, car.plateNo, car.carModel, carMake.makeName, car.year, car.ratePerDay, car.status 
-                      FROM car 
-                      JOIN carMake ON car.makeID = carMake.makeID";
-            $result = $conn->query($query);
-            while ($row = $result->fetch_assoc()):
-            ?>
-            <tr>
-              <td><?= $row['carID'] ?></td>
-              <td><?= $row['plateNo'] ?></td>
-              <td><?= $row['carModel'] ?></td>
-              <td><?= $row['makeName'] ?></td>
-              <td><?= $row['year'] ?></td>
-              <td><?= $row['ratePerDay'] ?></td>
-              <td><?= $row['status'] ?></td>
-              <td><a href="cars.php?delete=<?= $row['carID'] ?>" class="delete-btn" onclick="return confirm('Delete this car?')">Delete</a></td>
-            </tr>
-            <?php endwhile; ?>
-          </tbody>
+          <tbody id="carRows"></tbody>
         </table>
+        <p id="carMessage" class="message"></p>
       </div>
     </main>
   </div>
@@ -110,5 +67,60 @@ if (isset($_POST['add_car'])) {
       </form>
     </div>
   </div>
+    <script>
+    const apiBaseUrl = 'http://localhost:8080/api/cars.php';
+    const tbody = document.getElementById('carRows');
+    const message = document.getElementById('carMessage');
+
+    async function loadCars() {
+      message.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load cars  .');
+
+        tbody.innerHTML = data.cars.map(car => `
+          <tr>
+            <td>${car.carID}</td>
+            <td>${car.plateNo}</td>
+            <td>${car.carModel}</td>
+            <td>${car.makeName}</td>
+            <td>${car.year}</td>
+            <td>${car.capacity}</td>
+            <td>${car.transmission}</td>
+            <td>${car.ratePerDay}</td>
+            <td>${car.status}</td>
+            <td><button class="delete-btn" data-id="${car.carID}">Delete</button></td>
+          </tr>
+        `).join('');
+
+        message.textContent = data.cars.length ? '' : 'No cars found.';
+      } catch (err) {
+        message.textContent = err.message;
+        tbody.innerHTML = '';
+      }
+    }
+    tbody.addEventListener('click', async (event) => {
+      if (!event.target.matches('.delete-btn')) return;
+
+      const customerId = event.target.dataset.id;
+      if (!confirm(`Delete car ${carId}?`)) return;
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ carID: carId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed.');
+        await loadCars();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    loadCars();
+  </script>
 </body>
 </html>

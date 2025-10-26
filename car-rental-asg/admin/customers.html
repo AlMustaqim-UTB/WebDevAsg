@@ -1,25 +1,3 @@
-<!-- <?php
-include '../config/db.php';
-
-// Delete customer
-if (isset($_GET['delete'])) {
-  $id = $_GET['delete'];
-  $conn->query("DELETE FROM customer WHERE customerID = '$id'");
-  header("Location: customers.php");
-  exit;
-}
-
-// Add new customer
-if (isset($_POST['add_customer'])) {
-  $id = $_POST['customerID'];
-  $license = $_POST['licenseNo'];
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-  $conn->query("INSERT INTO customer (customerID, licenseNo, email, password) VALUES ('$id','$license','$email','$password')");
-  header("Location: customers.php");
-  exit;
-}
-?> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
