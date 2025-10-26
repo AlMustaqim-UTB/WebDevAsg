@@ -128,8 +128,7 @@
           transmission: c.transmission,
           seats: c.capacity,
           pricePerDay: parseFloat(c.ratePerDay),
-          location: 'Gadong', // Default - you can add location field to DB if needed
-          img: '../css/images/cars/default.jpg', // Default image
+          img: c.imageURL || '../css/images/default.jpg', // Default image
           description: c.description,
           year: c.year
         }));

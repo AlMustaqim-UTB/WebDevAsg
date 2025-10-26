@@ -33,7 +33,7 @@
 
     function listCars(PDO $pdo): void {
         $listCarStmt = $pdo->query(
-            "SELECT cr.carID, cr.plateNo, cr.carModel, cr.description, cr.makeID, cm.makeName, 
+            "SELECT cr.carID, cr.plateNo, cr.carModel, cr.description, cr.makeID, cr.imageURL, cm.makeName, 
                     cr.year, cr.capacity, cr.transmission, cr.ratePerDay, cr.status, cr.categoryID
             FROM car cr
             JOIN carMake cm ON cm.makeID = cr.makeID
@@ -59,6 +59,7 @@
         $plateNo      = trim($input['plateNo'] ?? '');
         $carModel     = trim($input['carModel'] ?? '');
         $description  = trim($input['description'] ?? '');
+        $imgURL       = trim($input['imageURL'] ?? '');
         $makeID       = trim($input['makeID'] ?? '');
         $year         = (int) ($input['year'] ?? 0);
         $capacity     = (int) ($input['capacity'] ?? 0);
@@ -77,21 +78,22 @@
 
         try {
             $stmt = $pdo->prepare(
-                "INSERT INTO car (carID, plateNo, carModel, description, makeID, year, capacity, transmission, ratePerDay, status, categoryID)
-                 VALUES (:carID, :plateNo, :carModel, :description, :makeID, :year, :capacity, :transmission, :ratePerDay, :status, :categoryID)"
+                "INSERT INTO car (carID, plateNo, carModel, description, imageURL, makeID, year, capacity, transmission, ratePerDay, status, categoryID)
+                 VALUES (:carID, :plateNo, :carModel, :description, :imageURL, :makeID, :year, :capacity, :transmission, :ratePerDay, :status, :categoryID)"
             );
             $stmt->execute([
-                ':carID'       => $carID,
-                ':plateNo'     => $plateNo,
-                ':carModel'    => $carModel,
-                ':description' => $description,
-                ':makeID'      => $makeID,
-                ':year'        => $year,
-                ':capacity'    => $capacity,
-                ':transmission'=> $transmission,
-                ':ratePerDay'  => $ratePerDay,
-                ':status'      => $status,
-                ':categoryID'  => $categoryID
+                ':carID'        => $carID,
+                ':plateNo'      => $plateNo,
+                ':carModel'     => $carModel,
+                ':description'  => $description,
+                ':imageURL'     => $imgURL,
+                ':makeID'       => $makeID,
+                ':year'         => $year,
+                ':capacity'     => $capacity,
+                ':transmission' => $transmission,
+                ':ratePerDay'   => $ratePerDay,
+                ':status'       => $status,
+                ':categoryID'   => $categoryID
             ]);
 
             echo json_encode(['success' => true, 'message' => 'Car added successfully.']);
@@ -129,6 +131,7 @@
         $plateNo      = trim($input['plateNo'] ?? '');
         $carModel     = trim($input['carModel'] ?? '');
         $description  = trim($input['description'] ?? '');
+        $imgURL       = trim($input['imageURL'] ?? '');
         $makeID       = trim($input['makeID'] ?? '');
         $year         = (int) ($input['year'] ?? 0);
         $capacity     = (int) ($input['capacity'] ?? 0);
@@ -148,7 +151,7 @@
         try {
             $stmt = $pdo->prepare(
                 "UPDATE car 
-                 SET plateNo = :plateNo, carModel = :carModel, description = :description,
+                 SET plateNo = :plateNo, carModel = :carModel, description = :description, imageURL = :imageURL,
                      makeID = :makeID, year = :year, capacity = :capacity, 
                      transmission = :transmission, ratePerDay = :ratePerDay, 
                      status = :status, categoryID = :categoryID
@@ -159,6 +162,7 @@
                 ':plateNo'     => $plateNo,
                 ':carModel'    => $carModel,
                 ':description' => $description,
+                ':imageURL'    => $imgURL,
                 ':makeID'      => $makeID,
                 ':year'        => $year,
                 ':capacity'    => $capacity,

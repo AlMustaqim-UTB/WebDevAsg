@@ -88,6 +88,9 @@
         <label>Category</label>
         <select name="categoryID" id="categorySelect" required></select>
 
+        <label>Image URL</label>
+        <input type="text" name="imageURL" id="imageURL" placeholder="e.g. ../css/images/cars/image.jpg">
+
         <label>Description</label>
         <textarea name="description" id="description" rows="3" required></textarea>
 
@@ -226,6 +229,7 @@
         document.getElementById('ratePerDay').value = car.ratePerDay;
         document.getElementById('status').value = car.status;
         document.getElementById('categorySelect').value = car.categoryID;
+        document.getElementById('imageURL').value = car.imageURL || '';
         document.getElementById('description').value = car.description;
 
         carFormMessage.textContent = '';
