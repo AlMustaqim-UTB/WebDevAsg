@@ -1,30 +1,3 @@
-<!-- <?php
-include '../config/db.php';
-
-if (isset($_GET['delete'])) {
-  $id = $_GET['delete'];
-  $conn->query("DELETE FROM rentalID WHERE rentalID = '$id'");
-  header("Location: rentals.php");
-  exit;
-}
-
-if (isset($_POST['add_rental'])) {
-  $rentalID = $_POST['rentalID'];
-  $customerID = $_POST['customerID'];
-  $carID = $_POST['carID'];
-  $startDate = $_POST['startDate'];
-  $endDate = $_POST['endDate'];
-  $totalPrice = $_POST['totalPrice'];
-  $status = $_POST['rentalStatus'];
-  $paymentID = $_POST['paymentID'];
-  $location = $_POST['deliveryLocation'];
-
-  $conn->query("INSERT INTO rentalID (rentalID, customerID, carID, startDate, endDate, totalPrice, rentalStatus, paymentID, deliveryLocation)
-                VALUES ('$rentalID','$customerID','$carID','$startDate','$endDate','$totalPrice','$status','$paymentID','$location')");
-  header("Location: rentals.php");
-  exit;
-}
-?> -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,6 +5,7 @@ if (isset($_POST['add_rental'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Rentals</title>
   <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/adminCarModal.css">
 </head>
 <body>
   <div class="overlay">
@@ -46,9 +20,7 @@ if (isset($_POST['add_rental'])) {
 
     <main>
       <h1>Rentals</h1>
-      <p>View and manage all car rental records below.</p>
-
-      <button class="add-btn" onclick="document.getElementById('addModal').style.display='flex'">+ Add Rental</button>
+      <button id="openModal" class="add-btn">+ Add Rental</button>
 
       <div class="table-container">
         <table>
@@ -61,59 +33,245 @@ if (isset($_POST['add_rental'])) {
               <th>End Date</th>
               <th>Total Price</th>
               <th>Status</th>
+              <th>Payment ID</th>
               <th>Location</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-            <?php
-            $query = "SELECT * FROM rentalID";
-            $result = $conn->query($query);
-            while ($row = $result->fetch_assoc()):
-            ?>
-            <tr>
-              <td><?= $row['rentalID'] ?></td>
-              <td><?= $row['customerID'] ?></td>
-              <td><?= $row['carID'] ?></td>
-              <td><?= $row['startDate'] ?></td>
-              <td><?= $row['endDate'] ?></td>
-              <td><?= $row['totalPrice'] ?></td>
-              <td><?= $row['rentalStatus'] ?></td>
-              <td><?= $row['deliveryLocation'] ?></td>
-              <td>
-                <a href="rentals.php?delete=<?= $row['rentalID'] ?>" class="delete-btn" onclick="return confirm('Delete this rental?')">Delete</a>
-              </td>
-            </tr>
-            <?php endwhile; ?>
-          </tbody>
+          <tbody id="rentalRows"></tbody>
         </table>
+        <p id="rentalMessage" class="message"></p>
       </div>
     </main>
   </div>
 
-  <!-- Modal -->
-  <div id="addModal" class="modal">
+  <div id="rentalModal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
-      <h2>Add New Rental</h2>
-      <form method="POST">
-        <input type="text" name="rentalID" placeholder="Rental ID (e.g. RI005)" required>
-        <input type="text" name="customerID" placeholder="Customer ID (e.g. CU00001)" required>
-        <input type="text" name="carID" placeholder="Car ID (e.g. CI001)" required>
-        <input type="date" name="startDate" required>
-        <input type="date" name="endDate" required>
-        <input type="number" step="0.01" name="totalPrice" placeholder="Total Price" required>
-        <select name="rentalStatus">
+      <span class="close" id="closeModal">&times;</span>
+      <h2 id="modalTitle">Add New Rental</h2>
+      <form id="rentalForm">
+        <input type="hidden" name="originalRentalID" id="originalRentalID">
+
+        <label>Rental ID</label>
+        <input type="text" name="rentalID" id="rentalID" placeholder="e.g. RI005" required>
+
+        <label>Customer</label>
+        <select name="customerID" id="customerSelect" required></select>
+
+        <label>Car</label>
+        <select name="carID" id="carSelect" required></select>
+
+        <label>Start Date</label>
+        <input type="date" name="startDate" id="startDate" required>
+
+        <label>End Date</label>
+        <input type="date" name="endDate" id="endDate" required>
+
+        <label>Total Price</label>
+        <input type="number" name="totalPrice" id="totalPrice" step="0.01" required>
+
+        <label>Status</label>
+        <select name="rentalStatus" id="rentalStatus" required>
           <option value="Pending">Pending</option>
           <option value="Active">Active</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
         </select>
-        <input type="text" name="paymentID" placeholder="Payment ID (e.g. PI004)" required>
-        <input type="text" name="deliveryLocation" placeholder="Delivery Location" required>
-        <button type="submit" name="add_rental">Add Rental</button>
+
+        <label>Payment</label>
+        <select name="paymentID" id="paymentSelect" required></select>
+
+        <label>Delivery Location</label>
+        <input type="text" name="deliveryLocation" id="deliveryLocation" required>
+
+
+        <button type="submit" class="submit-btn" id="submitBtn">Save Rental</button>
       </form>
+      <p id="rentalFormMessage" class="message"></p>
     </div>
   </div>
+
+  <script>
+    const apiBaseUrl = 'http://localhost:8080/api/rental.php';
+    const tbody = document.getElementById('rentalRows');
+    const message = document.getElementById('rentalMessage');
+    const modal = document.getElementById('rentalModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const openModalBtn = document.getElementById('openModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const rentalForm = document.getElementById('rentalForm');
+    const rentalFormMessage = document.getElementById('rentalFormMessage');
+    const customerSelect = document.getElementById('customerSelect');
+    const carSelect = document.getElementById('carSelect');
+    const paymentSelect = document.getElementById('paymentSelect');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let isEditMode = false;
+
+    async function loadMetadata() {
+      try {
+        const [customerRes, carRes, paymentRes] = await Promise.all([
+          fetch(`${apiBaseUrl}?action=customers`),
+          fetch(`${apiBaseUrl}?action=cars`),
+          fetch(`${apiBaseUrl}?action=payments`)
+        ]);
+
+        const customerData = await customerRes.json();
+        const carData = await carRes.json();
+        const paymentData = await paymentRes.json();
+
+        if (!customerRes.ok || !customerData.success) throw new Error(customerData.error || 'Failed to load customers.');
+        if (!carRes.ok || !carData.success) throw new Error(carData.error || 'Failed to load cars.');
+        if (!paymentRes.ok || !paymentData.success) throw new Error(paymentData.error || 'Failed to load payments.');
+
+        customerSelect.innerHTML = customerData.customers
+          .map(cust => `<option value="${cust.customerID}">${cust.customerID}</option>`)
+          .join('');
+
+        carSelect.innerHTML = carData.cars
+          .map(car => `<option value="${car.carID}">${car.carID} - ${car.carModel} (${car.status})</option>`)
+          .join('');
+
+        paymentSelect.innerHTML = paymentData.payments
+          .map(payment => `<option value="${payment.paymentID}">${payment.paymentID} - ${payment.paymentMethod} (${payment.paymentStatus})</option>`)
+          .join('');
+      } catch (err) {
+        rentalFormMessage.textContent = err.message;
+      }
+    }
+
+    openModalBtn.addEventListener('click', () => {
+      isEditMode = false;
+      modalTitle.textContent = 'Add New Rental';
+      submitBtn.textContent = 'Save Rental';
+      rentalForm.reset();
+      document.getElementById('originalRentalID').value = '';
+      document.getElementById('rentalID').disabled = false;
+      rentalFormMessage.textContent = '';
+      modal.style.display = 'block';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) modal.style.display = 'none';
+    });
+
+    async function loadRentals() {
+      message.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load rentals.');
+
+        tbody.innerHTML = data.rentals.map(rental => `
+          <tr>
+            <td>${rental.rentalID}</td>
+            <td>${rental.customerID}</td>
+            <td>${rental.carID}</td>
+            <td>${rental.startDate}</td>
+            <td>${rental.endDate}</td>
+            <td>${rental.totalPrice}</td>
+            <td>${rental.rentalStatus}</td>
+            <td>${rental.paymentID}</td>
+            <td>${rental.deliveryLocation}</td>
+            <td>
+              <button class="edit-btn" data-rental='${JSON.stringify(rental)}'>Edit</button>
+              <button class="delete-btn" data-id="${rental.rentalID}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        message.textContent = data.rentals.length ? '' : 'No rentals found.';
+      } catch (err) {
+        message.textContent = err.message;
+        tbody.innerHTML = '';
+      }
+    }
+
+    tbody.addEventListener('click', async (event) => {
+      if (event.target.matches('.delete-btn')) {
+        const rentalID = event.target.dataset.id;
+        if (!confirm(`Delete rental ${rentalID}?`)) return;
+
+        try {
+          const res = await fetch(`${apiBaseUrl}?action=delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rentalID })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed.');
+          await loadRentals();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      if (event.target.matches('.edit-btn')) {
+        const rental = JSON.parse(event.target.dataset.rental);
+        isEditMode = true;
+        modalTitle.textContent = 'Edit Rental';
+        submitBtn.textContent = 'Update Rental';
+
+        document.getElementById('originalRentalID').value = rental.rentalID;
+        document.getElementById('rentalID').value = rental.rentalID;
+        document.getElementById('rentalID').disabled = true;
+        document.getElementById('customerSelect').value = rental.customerID;
+        document.getElementById('carSelect').value = rental.carID;
+        document.getElementById('startDate').value = rental.startDate;
+        document.getElementById('endDate').value = rental.endDate;
+        document.getElementById('totalPrice').value = rental.totalPrice;
+        document.getElementById('rentalStatus').value = rental.rentalStatus;
+        document.getElementById('paymentSelect').value = rental.paymentID;
+        document.getElementById('deliveryLocation').value = rental.deliveryLocation;
+
+        rentalFormMessage.textContent = '';
+        modal.style.display = 'block';
+      }
+    });
+
+    rentalForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      rentalFormMessage.textContent = isEditMode ? 'Updating...' : 'Saving...';
+
+      const formData = new FormData(rentalForm);
+      const payload = Object.fromEntries(formData.entries());
+      
+      if (isEditMode) {
+        payload.rentalID = payload.originalRentalID;
+      }
+      delete payload.originalRentalID;
+
+      const action = isEditMode ? 'update' : 'create';
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=${action}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) throw new Error(data.error || `Unable to ${isEditMode ? 'update' : 'add'} rental.`);
+
+        rentalFormMessage.textContent = data.message;
+        await loadRentals();
+        setTimeout(() => {
+          rentalFormMessage.textContent = '';
+          modal.style.display = 'none';
+        }, 800);
+      } catch (err) {
+        rentalFormMessage.textContent = err.message;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadMetadata();
+      await loadRentals();
+    });
+  </script>
 </body>
 </html>
