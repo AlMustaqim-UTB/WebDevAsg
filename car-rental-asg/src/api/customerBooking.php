@@ -1,4 +1,5 @@
 <?php
+<?php
     header('Content-Type: application/json; charset=utf-8');
 
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -17,7 +18,6 @@
     header('Access-Control-Allow-Headers: Content-Type');
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
-    #db configuration
     require_once 'config.php';
     $action = $_REQUEST['action'] ?? null;
     $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
