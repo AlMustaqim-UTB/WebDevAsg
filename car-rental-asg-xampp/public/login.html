@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <link rel="stylesheet" type="text/css" href="../css/loginStyle.css">
+</head>
+<body>
+  <div class="overlay">
+    <div class="card" role="form" aria-labelledby="login-title">
+        <div class="logoBrand"><img src="../css/images/logo.png" alt=""></div>
+      <div class="brand">
+        <h1 id="login-title">Welcome</h1>
+        <p class="sub">Sign in to access your dashboard and manage your bookings.</p>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required />
+        </div>
+        <button id="signInBtn" class="btn" type="submit">Sign in</button>
+        <div class="divider">or</div>
+        <div class="links">
+          New here? <a href="register.html">Create an account</a>
+        </div>
+      </form>
+      <div id="loginMessage" class="login-message" aria-live="polite"></div>
+    </div>
+  </div>
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/login.php';
+    const form = document.getElementById('loginForm');
+    const messageEl = document.getElementById('loginMessage');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      messageEl.textContent = 'Signing in...';
+
+      const payload = {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      if (!payload.email || !payload.password) {
+        messageEl.textContent = 'Email and password are required.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.success) {
+          messageEl.textContent = data.error || 'Invalid credentials.';
+          return;
+        }
+
+        // Store user info in sessionStorage
+        console.log('Login successful, storing userID:', data.userID); // Debug log
+        sessionStorage.setItem('userID', data.userID);
+        sessionStorage.setItem('userRole', data.role);
+        
+        if (data.role === 'customer') {
+          sessionStorage.setItem('customerID', data.userID);
+          console.log('CustomerID stored:', sessionStorage.getItem('customerID')); // Debug log
+          window.location.href = 'main.html';
+        } else if (data.role === 'admin') {
+          sessionStorage.setItem('adminID', data.userID);
+          window.location.href = '../admin/adminMain.html';
+        } else {
+          messageEl.textContent = 'Unknown account type.';
+        }
+      } catch (err) {
+        messageEl.textContent = 'Unable to sign in. Please try again.';
+        console.error('Login error:', err);
+      }
+    });
+  </script>
+</body>
+</html>

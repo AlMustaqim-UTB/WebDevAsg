@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Customers</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../css/images/logo.png" alt="Logo"></li>
+        <li><a href="customers.html" class="active">Customers</a></li>
+        <li><a href="cars.html">Cars</a></li>
+        <li><a href="rentals.html">Rentals</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h1>Customers</h1>
+      <p>View, or remove customers below.</p>
+
+    <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Customer ID</th>
+              <th>License No</th>
+              <th>Email</th>
+              <th>Phone No</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="customerRows">
+          </tbody>
+        </table>
+        <p id="customersMessage" class="message"></p>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/adminCustomer.php';
+    const tbody = document.getElementById('customerRows');
+    const message = document.getElementById('customersMessage');
+
+    async function loadCustomers() {
+      message.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load customers.');
+
+        tbody.innerHTML = data.customers.map(c => `
+          <tr>
+            <td>${c.customerID}</td>
+            <td>${c.licenseNo}</td>
+            <td>${c.email}</td>
+            <td>${c.phoneNo}</td>
+            <td><button class="delete-btn" data-id="${c.customerID}">Delete</button></td>
+          </tr>
+        `).join('');
+
+        message.textContent = data.customers.length ? '' : 'No customers found.';
+      } catch (err) {
+        message.textContent = err.message;
+        tbody.innerHTML = '';
+      }
+    }
+    tbody.addEventListener('click', async (event) => {
+      if (!event.target.matches('.delete-btn')) return;
+
+      const customerId = event.target.dataset.id;
+      if (!confirm(`Delete customer ${customerId}?`)) return;
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customerID: customerId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed.');
+        await loadCustomers();
+      } catch (err) {
+        alert(err.message);
+      }
+    });
+
+    loadCustomers();
+  </script>
+</body>
+</html>

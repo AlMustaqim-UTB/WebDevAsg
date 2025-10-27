@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Cars</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/adminCarModal.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../css/images/logo.png" alt="Logo"></li>
+        <li><a href="customers.html">Customers</a></li>
+        <li><a href="cars.html" class="active">Cars</a></li>
+        <li><a href="rentals.html">Rentals</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <h1>Cars</h1>
+      <button id="openModal" class="add-btn">+ Add Car</button>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Car ID</th>
+              <th>Plate No</th>
+              <th>Model</th>
+              <th>Make</th>
+              <th>Year</th>
+              <th>Capacity</th>
+              <th>Transmission</th>
+              <th>Rate/Day</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="carRows"></tbody>
+        </table>
+        <p id="carMessage" class="message"></p>
+      </div>
+    </main>
+  </div>
+
+  <div id="carModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h2 id="modalTitle">Add New Car</h2>
+      <form id="carForm">
+        <input type="hidden" name="originalCarID" id="originalCarID">
+
+        <label>Car ID</label>
+        <input type="text" name="carID" id="carID" required>
+
+        <label>Plate Number</label>
+        <input type="text" name="plateNo" id="plateNo" required>
+
+        <label>Model</label>
+        <input type="text" name="carModel" id="carModel" required>
+
+        <label>Make</label>
+        <select name="makeID" id="makeSelect" required></select>
+
+        <label>Year</label>
+        <input type="number" name="year" id="year" required>
+
+        <label>Capacity</label>
+        <input type="number" name="capacity" id="capacity" required>
+
+        <label>Transmission</label>
+        <select name="transmission" id="transmission" required>
+          <option value="Automatic">Automatic</option>
+          <option value="Manual">Manual</option>
+        </select>
+
+        <label>Rate Per Day</label>
+        <input type="number" name="ratePerDay" id="ratePerDay" step="0.01" required>
+
+        <label>Status</label>
+        <select name="status" id="status" required>
+          <option value="Available">Available</option>
+          <option value="Rented">Rented</option>
+        </select>
+
+        <label>Category</label>
+        <select name="categoryID" id="categorySelect" required></select>
+
+        <label>Image URL</label>
+        <input type="text" name="imageURL" id="imageURL" placeholder="e.g. ../css/images/cars/image.jpg">
+
+        <label>Description</label>
+        <textarea name="description" id="description" rows="3" required></textarea>
+
+        <button type="submit" class="submit-btn" id="submitBtn">Save Car</button>
+      </form>
+      <p id="carFormMessage" class="message"></p>
+    </div>
+  </div>
+
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/cars.php';
+    const tbody = document.getElementById('carRows');
+    const message = document.getElementById('carMessage');
+    const modal = document.getElementById('carModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const openModalBtn = document.getElementById('openModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const carForm = document.getElementById('carForm');
+    const carFormMessage = document.getElementById('carFormMessage');
+    const makeSelect = document.getElementById('makeSelect');
+    const categorySelect = document.getElementById('categorySelect');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let isEditMode = false;
+
+    async function loadMetadata() {
+      try {
+        const [makeRes, categoryRes] = await Promise.all([
+          fetch(`${apiBaseUrl}?action=makes`),
+          fetch(`${apiBaseUrl}?action=categories`)
+        ]);
+
+        const makeData = await makeRes.json();
+        const categoryData = await categoryRes.json();
+
+        if (!makeRes.ok || !makeData.success) throw new Error(makeData.error || 'Failed to load car makes.');
+        if (!categoryRes.ok || !categoryData.success) throw new Error(categoryData.error || 'Failed to load categories.');
+
+        makeSelect.innerHTML = makeData.makes
+          .map(make => `<option value="${make.makeID}">${make.makeName}</option>`)
+          .join('');
+
+        categorySelect.innerHTML = categoryData.categories
+          .map(cat => `<option value="${cat.categoryID}">${cat.categoryName}</option>`)
+          .join('');
+      } catch (err) {
+        carFormMessage.textContent = err.message;
+      }
+    }
+
+    openModalBtn.addEventListener('click', () => {
+      isEditMode = false;
+      modalTitle.textContent = 'Add New Car';
+      submitBtn.textContent = 'Save Car';
+      carForm.reset();
+      document.getElementById('originalCarID').value = '';
+      document.getElementById('carID').disabled = false;
+      carFormMessage.textContent = '';
+      modal.style.display = 'block';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target === modal) modal.style.display = 'none';
+    });
+
+    async function loadCars() {
+      message.textContent = 'Loading...';
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load cars.');
+
+        tbody.innerHTML = data.cars.map(car => `
+          <tr>
+            <td>${car.carID}</td>
+            <td>${car.plateNo}</td>
+            <td>${car.carModel}</td>
+            <td>${car.makeName}</td>
+            <td>${car.year}</td>
+            <td>${car.capacity}</td>
+            <td>${car.transmission}</td>
+            <td>${car.ratePerDay}</td>
+            <td>${car.status}</td>
+            <td>
+              <button class="edit-btn" data-car='${JSON.stringify(car)}'>Edit</button>
+              <button class="delete-btn" data-id="${car.carID}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        message.textContent = data.cars.length ? '' : 'No cars found.';
+      } catch (err) {
+        message.textContent = err.message;
+        tbody.innerHTML = '';
+      }
+    }
+
+    tbody.addEventListener('click', async (event) => {
+      if (event.target.matches('.delete-btn')) {
+        const carId = event.target.dataset.id;
+        if (!confirm(`Delete car ${carId}?`)) return;
+
+        try {
+          const res = await fetch(`${apiBaseUrl}?action=delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ carID: carId })
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed.');
+          await loadCars();
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      if (event.target.matches('.edit-btn')) {
+        const car = JSON.parse(event.target.dataset.car);
+        isEditMode = true;
+        modalTitle.textContent = 'Edit Car';
+        submitBtn.textContent = 'Update Car';
+
+        document.getElementById('originalCarID').value = car.carID;
+        document.getElementById('carID').value = car.carID;
+        document.getElementById('carID').disabled = true;
+        document.getElementById('plateNo').value = car.plateNo;
+        document.getElementById('carModel').value = car.carModel;
+        document.getElementById('makeSelect').value = car.makeID;
+        document.getElementById('year').value = car.year;
+        document.getElementById('capacity').value = car.capacity;
+        document.getElementById('transmission').value = car.transmission;
+        document.getElementById('ratePerDay').value = car.ratePerDay;
+        document.getElementById('status').value = car.status;
+        document.getElementById('categorySelect').value = car.categoryID;
+        document.getElementById('imageURL').value = car.imageURL || '';
+        document.getElementById('description').value = car.description;
+
+        carFormMessage.textContent = '';
+        modal.style.display = 'block';
+      }
+    });
+
+    carForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      carFormMessage.textContent = isEditMode ? 'Updating...' : 'Saving...';
+
+      const formData = new FormData(carForm);
+      const payload = Object.fromEntries(formData.entries());
+      
+      // For edit mode, use the original car ID
+      if (isEditMode) {
+        payload.carID = payload.originalCarID;
+      }
+      delete payload.originalCarID;
+
+      const action = isEditMode ? 'update' : 'create';
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=${action}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) throw new Error(data.error || `Unable to ${isEditMode ? 'update' : 'add'} car.`);
+
+        carFormMessage.textContent = data.message;
+        await loadCars();
+        setTimeout(() => {
+          carFormMessage.textContent = '';
+          modal.style.display = 'none';
+        }, 800);
+      } catch (err) {
+        carFormMessage.textContent = err.message;
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadMetadata();
+      await loadCars();
+    });
+  </script>
+</body>
+</html>

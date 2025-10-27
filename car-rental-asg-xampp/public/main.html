@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+  </head>
+  <body>
+      <nav>
+        <ul>
+          <li><img src="../css/images/logo.png" alt="" /></li>
+          <li>
+            <a href=""><u>Home</u></a>
+          </li>
+          <li><a href="booking.html">My Bookings</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="login.html">Logout</a></li>
+        </ul>
+      </nav>
+
+    <div class="main">
+        <section id="carSearch">
+          <h1 id="carSearchHeader">Find a Rental Car</h1>
+
+          <div class="searchBar">
+            <label class="nameLabel" for="nameSearch">Search by car name</label>
+            <input id="nameSearch" type="search" placeholder="Search by car name">
+            <button id="searchBtn" type="button">Search</button>
+          </div>
+
+          
+    <form id="filtersForm" class="filtersPanel" onsubmit="return false">
+      <div class="filterField">
+        <label for="locationSelect">Location</label>
+        <select id="locationSelect">
+          <option value="">Anywhere</option>
+          <option>Gadong</option><option>Kiulap</option>
+          <option>Jerudong</option><option>BSB</option>
+        </select>
+      </div>
+
+      <div class="filterField">
+        <label for="typeSelect">Body type</label>
+        <select id="typeSelect">
+          <option value="">Any</option>
+        </select>
+      </div>
+
+      <div class="filterField">
+        <label for="transmissionSelect">Transmission</label>
+        <select id="transmissionSelect">
+          <option value="">Any</option>
+          <option>Automatic</option><option>Manual</option>
+        </select>
+      </div>
+
+      <div class="filterField">
+        <label for="seatsSelect">Seats (min)</label>
+        <select id="seatsSelect">
+          <option value="">Any</option>
+          <option value="2">2+</option>
+          <option value="4">4+</option>
+          <option value="5">5+</option>
+          <option value="7">7+</option>
+        </select>
+      </div>
+
+      <div class="filterField">
+        <label for="maxPriceInput">Max price / day (B$)</label>
+        <input id="maxPriceInput" type="number" min="0" step="1" placeholder="e.g. 60">
+      </div>
+
+      <div class="filterField">
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="">Relevance</option>
+          <option value="price-asc">Price/day: Low → High</option>
+          <option value="price-desc">Price/day: High → Low</option>
+          <option value="name-asc">Name: A → Z</option>
+          <option value="name-desc">Name: Z → A</option>
+        </select>
+      </div>
+
+      <div class="filtersActions">
+        <button type="button" id="applyBtn" class="actionBtn">Apply</button>
+        <button type="reset"  id="resetBtn" class="actionBtn actionBtn--dark">Reset</button>
+      </div>
+    </form>
+
+    <div id="results" class="carResults">
+      <p id="loadingMessage">Loading cars...</p>
+    </div>
+
+    </section>
+    </div>
+  
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/customerMain.php';
+
+    // --- Helpers ---
+    const $  = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+
+    let CARS = [];
+
+    // Fetch available cars from database
+    async function loadCars() {
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=list`);
+        const data = await res.json();
+        
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to load cars');
+        }
+
+        CARS = data.cars.map(c => ({
+          id: c.carID,
+          name: `${c.makeName} ${c.carModel}`,
+          makeName: c.makeName,
+          carModel: c.carModel,
+          type: c.categoryName || 'Other',
+          transmission: c.transmission,
+          seats: c.capacity,
+          pricePerDay: parseFloat(c.ratePerDay),
+          img: c.imageURL || '../css/images/default.jpg', // Default image
+          description: c.description,
+          year: c.year
+        }));
+
+        const loadingMsg = $('#loadingMessage');
+        if (loadingMsg) loadingMsg.remove();
+        
+        render(CARS);
+      } catch (err) {
+        $('#results').innerHTML = `<p class="error">Error loading cars: ${err.message}</p>`;
+      }
+    }
+
+    // Fetch categories for filter dropdown
+    async function loadCategories() {
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=categories`);
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          const typeSelect = $('#typeSelect');
+          const existingOptions = typeSelect.innerHTML;
+          typeSelect.innerHTML = existingOptions + data.categories
+            .map(cat => `<option>${cat.categoryName}</option>`)
+            .join('');
+        }
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    }
+
+    // Render cards into #results (.carResults)
+    function render(list){
+      if (list.length === 0) {
+        $('#results').innerHTML = '<p class="noResults">No cars found matching your criteria.</p>';
+        return;
+      }
+
+      $('#results').innerHTML = list.map(c => `
+        <a class="carLink" href="booking.html?id=${encodeURIComponent(c.id)}" aria-label="Book ${c.name}">
+          <article class="carCard">
+            <img src="${c.img}" alt="${c.name}">
+            <div class="carBody">
+              <h3 class="carTitle">${c.name}</h3>
+              <p class="carMeta">${c.type} · ${c.transmission} · ${c.seats} seats</p>
+              <div class="carPrice">B$ ${c.pricePerDay.toFixed(2)} / day</div>
+            </div>
+          </article>
+        </a>
+      `).join('');
+    }
+
+    // Apply filters + name search
+    function applyFilters(){
+      const qName = $('#nameSearch')?.value.trim().toLowerCase() || '';
+      const loc   = $('#locationSelect')?.value || '';
+      const type  = $('#typeSelect')?.value || '';
+      const trans = $('#transmissionSelect')?.value || '';
+      const seats = parseInt($('#seatsSelect')?.value || '0', 10);
+      const maxP  = parseFloat($('#maxPriceInput')?.value || '0');
+      const sort  = $('#sortSelect')?.value || '';
+
+      let list = CARS.filter(c => {
+        if (qName && !c.name.toLowerCase().includes(qName)) return false;
+        if (loc   && c.location !== loc) return false;
+        if (type  && c.type !== type) return false;
+        if (trans && c.transmission !== trans) return false;
+        if (seats && c.seats < seats) return false;
+        if (maxP  && c.pricePerDay > maxP) return false;
+        return true;
+      });
+
+      switch (sort){
+        case 'price-asc':  list.sort((a,b)=> a.pricePerDay - b.pricePerDay); break;
+        case 'price-desc': list.sort((a,b)=> b.pricePerDay - a.pricePerDay); break;
+        case 'name-asc':   list.sort((a,b)=> a.name.localeCompare(b.name));  break;
+        case 'name-desc':  list.sort((a,b)=> b.name.localeCompare(a.name));  break;
+      }
+
+      render(list);
+    }
+
+    // Wire up buttons/inputs
+    $('#searchBtn')?.addEventListener('click', applyFilters);
+    $('#nameSearch')?.addEventListener('keydown', e => { 
+      if (e.key === 'Enter'){ 
+        e.preventDefault(); 
+        applyFilters(); 
+      }
+    });
+    $('#applyBtn')?.addEventListener('click', applyFilters);
+
+    // Reset: native reset + clear the top search + re-render all
+    const form = document.getElementById('filtersForm');
+    form?.addEventListener('reset', () => {
+      setTimeout(() => {
+        const nameInput = document.getElementById('nameSearch');
+        if (nameInput) nameInput.value = '';
+        render(CARS);
+      }, 0);
+    });
+
+    // Optional: live update when selects/inputs change
+    $$('#filtersForm input, #filtersForm select').forEach(el => 
+      el.addEventListener('change', applyFilters)
+    );
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      await Promise.all([loadCategories(), loadCars()]);
+    });
+    </script>
+
+  </body>
+</html>
