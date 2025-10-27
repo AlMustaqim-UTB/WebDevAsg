@@ -1,0 +1,241 @@
+/* === GLOBAL RESET === */
+body {
+  min-height: 100vh;
+  background-image: url('images/bg1.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  font-family: "Alumni Sans Pinstripe", sans-serif;
+  color: #fdf0d5;
+  letter-spacing: 2px;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 0;
+}
+
+nav, main {
+  position: relative;
+  z-index: 1;
+}
+
+/* === NAVBAR === */
+nav {
+  background-color: rgba(0, 0, 0, 0.2);
+  font-size: 25px;
+}
+
+nav ul {
+  width: 100%;
+  list-style: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+nav li {
+  height: 75px;
+}
+
+nav a {
+  height: 100%;
+  padding: 0 30px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  color: #fdf0d5;
+}
+
+nav a:hover {
+  background-color: #0a9396;
+}
+
+nav li:first-child {
+  margin-right: auto;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+}
+
+nav li:first-child img {
+  width: 150px;
+  height: 150px;
+}
+
+/* === MAIN CONTENT === */
+main {
+  padding: 3rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+h1 {
+  font-size: 3rem;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  margin-bottom: 1rem;
+}
+
+p {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* === TABLE CONTAINER === */
+.table-container {
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+  color: #000;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.05rem;
+}
+
+thead {
+  background-color: #004aad;
+  color: #fff;
+}
+
+th {
+  padding: 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle;
+  color: #ffffff; /* white for header */
+  font-weight: bold;
+}
+
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle;
+  color: #222222; /* dark grey text for better contrast */
+  font-weight: 600; /* slightly bold for visibility */
+}
+
+tbody tr:hover {
+  background-color: rgba(0,74,173,0.1);
+}
+
+/* === ACTION BUTTON ROW FIX === */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin-top: 4px;
+}
+
+.action-buttons form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+/* Dropdown base style */
+select[name="newStatus"] {
+  padding: 5px 8px;
+  font-size: 0.85rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-weight: 600;
+  min-width: 110px;
+  text-align: center;
+}
+
+/* Dropdown colors */
+select.pending {
+  background-color: #f4b400; /* yellow */
+  color: black;
+}
+select.active {
+  background-color: #4285f4; /* blue */
+  color: white;
+}
+select.completed {
+  background-color: #0f9d58; /* green */
+  color: white;
+}
+
+/* Change button */
+.change-btn {
+  background: #0a9396;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+.change-btn:hover { background: #078082; }
+
+/* Delete button */
+.delete-btn {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+.delete-btn:hover { background: #a93226; }
+
+.edit-btn {
+  background: #e0c40f;
+  color: #000000;
+  border: none;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+.edit-btn:hover { background: #e7e739; }
+
+/* === STATUS LEGEND === */
+.status-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.legend-box {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  h1 { font-size: 2.2rem; }
+  nav { font-size: 20px; }
+  table { font-size: 0.9rem; }
+}

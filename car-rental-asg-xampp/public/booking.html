@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking</title>
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+  <link rel="stylesheet" type="text/css" href="../css/bookingStyle.css">
+</head>
+
+<body class="bookingPage">
+  <div class="bookingWrap">
+    
+    <!-- Left Column: Car Details & Booking Form -->
+    <main class="leftCol">
+      
+      <!-- Car Details Section -->
+      <section class="card">
+        <div class="cardBody">
+          <div class="carHero">
+            <img id="carImg" src="../css/images/cars/default.jpg" alt="Car" />
+            <div>
+              <h1 class="carName" id="carName">
+                Loading... <span class="badge" id="carClass">Class</span>
+              </h1>
+              <p class="carSpecs" id="carSpecs">Loading specifications...</p>
+            </div>
+          </div>
+          <div class="carDescription" id="carDescription"></div>
+        </div>
+      </section>
+
+      <!-- Booking Form Section -->
+      <section class="card">
+        <div class="cardBody">
+          <form id="bookingForm">
+            
+            <!-- Name Fields -->
+            <div class="row2">
+              <div>
+                <label for="firstName">First name</label>
+                <input id="firstName" required placeholder="e.g Wafri" />
+              </div>
+              <div>
+                <label for="lastName">Last name</label>
+                <input id="lastName" required placeholder="e.g. Hakim" />
+              </div>
+            </div>
+
+            <!-- Date Fields -->
+            <div class="row2">
+              <div>
+                <label for="startDate">Start date</label>
+                <input id="startDate" type="date" required />
+              </div>
+              <div>
+                <label for="endDate">End date</label>
+                <input id="endDate" type="date" required />
+              </div>
+            </div>
+
+            <!-- Hand-over Method -->
+            <div class="row1">
+              <label>Hand-over method</label>
+              <div class="radioRow">
+                <label>
+                  <input type="radio" name="handover" id="handoverPickup" value="pickup" checked />
+                  Pick up
+                </label>
+                <label>
+                  <input type="radio" name="handover" id="handoverDelivery" value="delivery" />
+                  Deliver to address
+                </label>
+              </div>
+            </div>
+
+            <!-- Delivery Address (conditional) -->
+            <div class="row1" id="deliveryGroup" hidden>
+              <label for="deliveryAddress">Delivery address</label>
+              <input id="deliveryAddress" placeholder="House/Street, Area, Postal code" />
+            </div>
+
+          </form>
+        </div>
+      </section>
+      
+    </main>
+
+    <!-- Right Column: Price Summary & Payment -->
+    <aside class="rightCol">
+      <section class="card payCard">
+        
+        <!-- Price Summary -->
+        <div class="cardBody">
+          <h2 class="cardTitle">Price Summary</h2>
+          <div class="summaryRow">
+            <span>Price / day</span>
+            <span id="pricePerDay">B$ 0</span>
+          </div>
+          <div class="summaryRow">
+            <span>Days</span>
+            <span id="daysCount">0</span>
+          </div>
+          <hr class="divider" />
+          <div class="summaryRow total">
+            <span>Total</span>
+            <span id="totalAmount">B$ 0</span>
+          </div>
+        </div>
+
+        <!-- Payment Buttons -->
+        <div class="cardBody payBottom">
+          <h2 class="cardTitle">Payment</h2>
+          <div class="payBtns">
+            <button id="btnOnline" class="btnPrimary" type="button">Pay Online</button>
+            <button id="btnCash" class="btnSecondary" type="button">Checkout (Cash)</button>
+          </div>
+        </div>
+
+      </section>
+    </aside>
+
+  </div>
+  
+  <!-- Status Modal -->
+  <div id="statusModal" class="modalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modalClose" id="modalClose" aria-label="Close">×</button>
+      <h3 id="modalTitle">Status</h3>
+      <p id="modalMessage">Message</p>
+      <div class="modalActions">
+        <a href="main.html">
+          <button id="modalOk" class="btnPrimary" type="button">OK</button>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/customerBooking.php';
+    let car = null;
+    let customerID = null;
+
+    // Check if user is logged in
+    function checkLogin() {
+      customerID = sessionStorage.getItem('customerID');
+      console.log('Checking login - customerID from sessionStorage:', customerID); // Debug log
+      
+      if (!customerID) {
+        // Also check userID as fallback
+        const userID = sessionStorage.getItem('userID');
+        const userRole = sessionStorage.getItem('userRole');
+        console.log('Fallback check - userID:', userID, 'userRole:', userRole); // Debug log
+        
+        if (userID && userRole === 'customer') {
+          customerID = userID;
+          sessionStorage.setItem('customerID', userID);
+          return true;
+        }
+        
+        alert('Please login first');
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Load Car Details from Database
+    const params = new URLSearchParams(window.location.search);
+    const carID = params.get('id');
+
+    async function loadCarDetails() {
+      if (!carID) {
+        document.getElementById('carName').textContent = 'No car selected';
+        document.getElementById('carSpecs').textContent = 'Please select a car from the main page.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=details&carID=${encodeURIComponent(carID)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to load car details');
+        }
+
+        const c = data.car;
+        car = {
+          id: c.carID,
+          name: `${c.makeName} ${c.carModel}`,
+          makeName: c.makeName,
+          carModel: c.carModel,
+          type: c.categoryName || 'Car',
+          transmission: c.transmission,
+          seats: c.capacity,
+          pricePerDay: parseFloat(c.ratePerDay),
+          img: c.imageURL || '../css/images/cars/default.jpg',
+          description: c.description,
+          year: c.year,
+          status: c.status
+        };
+
+        // Update UI with car details
+        document.getElementById('carImg').src = car.img;
+        document.getElementById('carImg').alt = car.name;
+        document.getElementById('carName').innerHTML = 
+          `${car.name} <span class="badge" id="carClass">${car.type}</span>`;
+        document.getElementById('carSpecs').textContent = 
+          `• ${car.transmission} • A/C • ${car.seats} seats • ${car.year}`;
+        
+        if (car.description) {
+          document.getElementById('carDescription').innerHTML = `<p>${car.description}</p>`;
+        }
+
+        updateReceipt();
+      } catch (err) {
+        document.getElementById('carName').textContent = 'Error loading car';
+        document.getElementById('carSpecs').textContent = err.message;
+        console.error('Failed to load car details:', err);
+      }
+    }
+
+    // ========================================
+    // Date Helper Functions
+    // ========================================
+    function ymd(d) {
+      const date = d instanceof Date ? d : new Date(d);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function addDays(dateInput, days) {
+      const d = dateInput instanceof Date ? new Date(dateInput) : new Date(dateInput);
+      d.setDate(d.getDate() + days);
+      return ymd(d);
+    }
+
+    // ========================================
+    // Date Validation Setup
+    // ========================================
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const today = new Date();
+    const todayStr = ymd(today);
+    const tomorrowStr = addDays(today, 1);
+
+    // Set minimum dates and default values
+    startDate.min = todayStr;
+    startDate.value = todayStr;
+    endDate.min = tomorrowStr;
+    endDate.value = tomorrowStr;
+
+    // Start date change handler
+    startDate.addEventListener('change', function () {
+      const minEnd = addDays(startDate.value, 1);
+      endDate.min = minEnd;
+      if (!endDate.value || endDate.value < minEnd) {
+        endDate.value = minEnd;
+      }
+      updateReceipt();
+    });
+
+    // End date change handler
+    endDate.addEventListener('change', function () {
+      const minEnd = addDays(startDate.value, 1);
+      if (endDate.value < minEnd) {
+        endDate.value = minEnd;
+      }
+      updateReceipt();
+    });
+
+    // ========================================
+    // Delivery Toggle Logic
+    // ========================================
+    const hoPickup = document.getElementById('handoverPickup');
+    const hoDelivery = document.getElementById('handoverDelivery');
+    const deliveryGroup = document.getElementById('deliveryGroup');
+    const deliveryAddress = document.getElementById('deliveryAddress');
+
+    function toggleDelivery() {
+      if (hoDelivery.checked) {
+        deliveryGroup.hidden = false;
+        deliveryAddress.required = true;
+      } else {
+        deliveryGroup.hidden = true;
+        deliveryAddress.required = false;
+      }
+    }
+
+    toggleDelivery();
+    hoPickup.addEventListener('change', toggleDelivery);
+    hoDelivery.addEventListener('change', toggleDelivery);
+
+    // ========================================
+    // Price Calculation
+    // ========================================
+    function fmtBND(n) {
+      return 'B$ ' + n.toFixed(2);
+    }
+
+    function daysBetween(a, b) {
+      if (!a || !b) return 1;
+      const ms = new Date(b) - new Date(a);
+      const d = Math.ceil(ms / (24 * 60 * 60 * 1000));
+      return d < 1 ? 1 : d;
+    }
+
+    const pricePerDayEl = document.getElementById('pricePerDay');
+    const daysCountEl = document.getElementById('daysCount');
+    const totalAmountEl = document.getElementById('totalAmount');
+
+    function updateReceipt() {
+      if (!car) return;
+      const perDay = car.pricePerDay || 0;
+      const days = daysBetween(startDate.value, endDate.value);
+      const total = perDay * days;
+      
+      pricePerDayEl.textContent = fmtBND(perDay);
+      daysCountEl.textContent = String(days);
+      totalAmountEl.textContent = fmtBND(total);
+    }
+
+    // ========================================
+    // Modal Functions
+    // ========================================
+    const statusModal = document.getElementById('statusModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalOk = document.getElementById('modalOk');
+    const modalClose = document.getElementById('modalClose');
+
+    function openModal(title, message) {
+      modalTitle.textContent = title || 'Status';
+      modalMessage.textContent = message || '';
+      statusModal.hidden = false;
+    }
+
+    function closeModal() {
+      statusModal.hidden = true;
+    }
+
+    // Modal event listeners
+    modalOk.addEventListener('click', closeModal);
+    modalClose.addEventListener('click', closeModal);
+    statusModal.addEventListener('click', (e) => {
+      if (e.target === statusModal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !statusModal.hidden) closeModal();
+    });
+
+    // ========================================
+    // Create Booking Function
+    // ========================================
+    async function createBooking(paymentMethod) {
+      if (!car || !customerID) {
+        openModal('Error', 'Missing booking information. Please login and try again.');
+        return;
+      }
+
+      const perDay = car.pricePerDay || 0;
+      const days = daysBetween(startDate.value, endDate.value);
+      const total = perDay * days;
+
+      const bookingData = {
+        customerID: customerID,
+        carID: car.id,
+        startDate: startDate.value,
+        endDate: endDate.value,
+        handoverMethod: hoDelivery.checked ? 'delivery' : 'pickup',
+        deliveryAddress: hoDelivery.checked ? deliveryAddress.value.trim() : '',
+        paymentMethod: paymentMethod, // 'online' or 'cash'
+        totalAmount: total
+      };
+
+      try {
+        const res = await fetch(`${apiBaseUrl}?action=createBooking`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to create booking');
+        }
+
+        const message = paymentMethod === 'online' 
+          ? 'Payment successful! Your booking has been confirmed. You will be redirected to the main page.'
+          : 'Booking successful! Payment pending (Cash at pickup). You will be redirected to the main page.';
+        
+        openModal('Success', message);
+
+        // Redirect after 3 seconds
+        setTimeout(() => {
+          window.location.href = 'main.html';
+        }, 3000);
+
+      } catch (err) {
+        openModal('Error', err.message || 'Failed to create booking. Please try again.');
+        console.error('Booking error:', err);
+      }
+    }
+
+    // ========================================
+    // Form Submission
+    // ========================================
+    const form = document.getElementById('bookingForm');
+    const btnOnline = document.getElementById('btnOnline');
+    const btnCash = document.getElementById('btnCash');
+
+    function formValid() {
+      if (!form) return true;
+      if (form.checkValidity()) return true;
+      form.reportValidity();
+      return false;
+    }
+
+    btnOnline.addEventListener('click', () => {
+      if (!formValid()) return;
+      createBooking('online');
+    });
+
+    btnCash.addEventListener('click', () => {
+      if (!formValid()) return;
+      createBooking('cash');
+    });
+
+    // ========================================
+    // Initialize on Page Load
+    // ========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      if (checkLogin()) {
+        loadCarDetails();
+      }
+    });
+  </script>
+
+</body>
+</html>
