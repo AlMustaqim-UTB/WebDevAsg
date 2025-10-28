@@ -87,6 +87,36 @@
         console.error('Login error:', err);
       }
     });
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      try {
+        const response = await fetch('../src/api/login.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Store customer info in sessionStorage
+          sessionStorage.setItem('customerID', data.customerID);
+          sessionStorage.setItem('custName', data.custName);
+          sessionStorage.setItem('email', data.email);
+          
+          // Redirect to main page
+          window.location.href = 'main.html';
+        } else {
+          alert('Login failed: ' + (data.error || 'Invalid credentials'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
   </script>
 </body>
 </html>

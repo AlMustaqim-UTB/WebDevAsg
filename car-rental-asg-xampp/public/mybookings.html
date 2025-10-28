@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>My Bookings</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/myBookings.css"/>
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><img src="../css/images/logo.png" alt=""></li>
+      <li><a href="main.html">Home</a></li>
+      <li><a href="mybookings.html"><u>My Bookings</u></a></li>
+      <li><a href="faq.html">FAQ</a></li>
+      <li><a href="#" onclick="logout(); return false;">Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="bookingsWrap">
+    <h1 class="pageTitle">My Bookings</h1>
+
+    <!-- Active Bookings Section -->
+    <section class="panel">
+      <header class="panelHead">
+        <h2>Active bookings</h2>
+        <span class="countBadge" id="activeCount">0</span>
+      </header>
+      <div class="cards" id="activeBookings">
+        <div class="empty">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Past Bookings Section -->
+    <section class="panel">
+      <header class="panelHead">
+        <h2>Past bookings</h2>
+        <span class="countBadge" id="pastCount">0</span>
+      </header>
+      <div class="cards" id="pastBookings">
+        <div class="empty">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Add logout function
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+    // Get customerID from sessionStorage
+    const customerID = sessionStorage.getItem('customerID');
+    
+    // Check if user is logged in
+    if (!customerID) {
+      alert('Please login first');
+      window.location.href = 'login.html';
+    }
+    
+    // const API_BASE = '../src/api/myBookings.php';
+    const API_BASE = 'http://localhost/car-rental-asg-xampp/src/api/myBookings.php';
+
+    // Helper functions
+    function getStatusTag(status, startDate) {
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (status === 'Ongoing' || (status === 'Pending' && startDate <= today)) {
+        return { class: 'tag-now', label: 'Ongoing' };
+      } else if (status === 'Pending' && startDate > today) {
+        return { class: 'tag-upcoming', label: 'Upcoming' };
+      } else if (status === 'Completed') {
+        return { class: 'tag-done', label: 'Completed' };
+      } else if (status === 'Cancelled') {
+        return { class: 'tag-cancel', label: 'Canceled' };
+      }
+      return { class: '', label: status };
+    }
+
+    function getHandoverMethod(deliveryLocation) {
+      return (deliveryLocation === 'HQ' || !deliveryLocation) ? 'Pick up' : 'Delivery';
+    }
+
+    function formatDate(dateStr) {
+      return dateStr.split(' ')[0];
+    }
+
+    // Render booking card
+    function renderBookingCard(booking, isPast = false) {
+      const statusTag = getStatusTag(booking.rentalStatus, booking.startDate);
+      const handoverMethod = getHandoverMethod(booking.deliveryLocation);
+      const carName = `${booking.makeName} ${booking.carModel}`;
+      const imageUrl = booking.imageURL || '../css/images/default-car.jpg';
+
+      const addressHtml = handoverMethod === 'Delivery' 
+        ? `<p class="bAddr">Address: ${booking.deliveryLocation}</p>` 
+        : '';
+
+      const actionsHtml = isPast
+        ? `<a class="btnGhost" href="booking.html?carID=${booking.carID}">Book Again</a>`
+        : `<a class="btnGhost" href="booking.html?id=${booking.rentalID}">View</a>
+           <button class="btnDanger" type="button" onclick="cancelBooking('${booking.rentalID}')">Cancel</button>`;
+
+      return `
+        <article class="card bCard">
+          <img class="bImg" src="${imageUrl}" alt="${carName}">
+          <div class="bBody">
+            <div class="bTop">
+              <h3 class="bTitle">${carName}</h3>
+              <span class="bTag ${statusTag.class}">${statusTag.label}</span>
+            </div>
+            <p class="bMeta">
+              ${formatDate(booking.startDate)} → ${formatDate(booking.endDate)} · 
+              ${booking.days} days · ${handoverMethod}
+            </p>
+            ${addressHtml}
+            <div class="bBottom">
+              <div class="bPrice">
+                <span>Total</span>
+                <strong>B$ ${Math.round(booking.totalPrice)}</strong>
+              </div>
+              <div class="bActions">
+                ${actionsHtml}
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    // Load active bookings
+        async function loadActiveBookings() {
+      try {
+        console.log('Fetching active bookings for customer:', customerID);
+        const response = await fetch(`${API_BASE}?action=getActive&customerID=${customerID}`);
+        console.log('Response status:', response.status);
+        
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        const data = JSON.parse(text);
+        console.log('Parsed data:', data);
+
+        const container = document.getElementById('activeBookings');
+        const countBadge = document.getElementById('activeCount');
+
+        if (data.success && data.bookings.length > 0) {
+          container.innerHTML = data.bookings.map(b => renderBookingCard(b, false)).join('');
+          countBadge.textContent = data.bookings.length;
+        } else {
+          container.innerHTML = '<div class="empty"><p>No active bookings found.</p></div>';
+          countBadge.textContent = '0';
+        }
+      } catch (error) {
+        console.error('Error loading active bookings:', error);
+        document.getElementById('activeBookings').innerHTML = 
+          '<div class="empty"><p>Error loading bookings. Check console for details.</p></div>';
+      }
+    }
+
+    // In mybookings.html, update loadPastBookings:
+    async function loadPastBookings() {
+      try {
+        const response = await fetch(`${API_BASE}?action=getPast&customerID=${customerID}`);
+        const text = await response.text(); // Get raw text first
+        console.log('Raw response:', text); // Debug: see what's actually returned
+        
+        const data = JSON.parse(text); // Then parse it
+        
+        const container = document.getElementById('pastBookings');
+        const countBadge = document.getElementById('pastCount');
+
+        if (data.success && data.bookings.length > 0) {
+          container.innerHTML = data.bookings.map(b => renderBookingCard(b, true)).join('');
+          countBadge.textContent = data.bookings.length;
+        } else {
+          container.innerHTML = '<div class="empty"><p>No past bookings found.</p></div>';
+          countBadge.textContent = '0';
+        }
+      } catch (error) {
+        console.error('Error loading past bookings:', error);
+        document.getElementById('pastBookings').innerHTML = 
+          '<div class="empty"><p>Error loading bookings.</p></div>';
+      }
+    }
+
+    // Cancel booking
+    async function cancelBooking(rentalID) {
+      if (!confirm('Are you sure you want to cancel this booking?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}?action=cancel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rentalID })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Booking cancelled successfully');
+          loadActiveBookings();
+          loadPastBookings();
+        } else {
+          alert('Failed to cancel booking: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Load bookings on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadActiveBookings();
+      loadPastBookings();
+    });
+  </script>
+</body>
+</html>
