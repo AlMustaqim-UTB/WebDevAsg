@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['customerID'])) {
+    header('Location: login.html');
+    exit;
+}
+
+$customerID = $_SESSION['customerID'];
+$custName = $_SESSION['custName'] ?? 'User';
+?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -16,17 +28,20 @@
         <ul>
           <li><img src="../css/images/logo.png" alt="" /></li>
           <li>
-            <a href=""><u>Home</u></a>
+            <a href="main.php"><u>Home</u></a>
           </li>
-          <li><a href="booking.html">My Bookings</a></li>
+          <li><a href="mybookings.html">My Bookings</a></li>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="login.html">Logout</a></li>
+          <li><a href="logout.php">Logout</a></li>
         </ul>
       </nav>
 
     <div class="main">
         <section id="carSearch">
           <h1 id="carSearchHeader">Find a Rental Car</h1>
+          <p style="color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.45); margin-bottom: 20px;">
+            Welcome, <?php echo htmlspecialchars($custName); ?>!
+          </p>
 
           <div class="searchBar">
             <label class="nameLabel" for="nameSearch">Search by car name</label>
@@ -102,6 +117,7 @@
   
   <script>
     const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/customerMain.php';
+    const customerID = '<?php echo $customerID; ?>'; // Available for booking
 
     // --- Helpers ---
     const $  = s => document.querySelector(s);
@@ -128,7 +144,7 @@
           transmission: c.transmission,
           seats: c.capacity,
           pricePerDay: parseFloat(c.ratePerDay),
-          img: c.imageURL || '../css/images/default.jpg', // Default image
+          img: c.imageURL || '../css/images/default.jpg',
           description: c.description,
           year: c.year
         }));
