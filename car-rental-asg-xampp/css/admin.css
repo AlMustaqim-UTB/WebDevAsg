@@ -239,3 +239,18 @@ select.completed {
   nav { font-size: 20px; }
   table { font-size: 0.9rem; }
 }
+
+.logout-btn {
+  background-color: #0a9396;
+  padding: 10px 20px;
+  border-radius: 6px;
+  margin-left: 20px;
+}
+
+.logout-btn:hover {
+
+
+  background-color: #007f7f;
+
+
+}
