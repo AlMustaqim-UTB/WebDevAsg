@@ -50,6 +50,7 @@
             return;
         }
 
+        //begin a database transaction
         $pdo->beginTransaction();
 
         try{

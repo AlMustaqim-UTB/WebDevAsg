@@ -1,7 +1,4 @@
 <?php
-    // ============================================
-    // HEADERS & CORS CONFIGURATION
-    // ============================================
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -13,9 +10,6 @@
         exit;
     }
 
-    // ============================================
-    // DATABASE CONNECTION
-    // ============================================
     require_once 'config.php';
     
     try {
@@ -29,10 +23,7 @@
         exit;
     }
 
-    // ============================================
     // FUNCTION: List All Available Cars
-    // Returns all cars with status 'Available'
-    // ============================================
     function listAvailableCars(PDO $pdo): void {
         $stmt = $pdo->query(
             "SELECT c.carID, c.plateNo, c.carModel, c.description, c.imageURL,
@@ -47,17 +38,11 @@
         echo json_encode(['success' => true, 'cars' => $stmt->fetchAll()]);
     }
 
-    // ============================================
-    // FUNCTION: List All Car Categories
-    // ============================================
     function listCategories(PDO $pdo): void {
         $stmt = $pdo->query("SELECT categoryID, categoryName FROM carCategory ORDER BY categoryName");
         echo json_encode(['success' => true, 'categories' => $stmt->fetchAll()]);
     }
 
-    // ============================================
-    // FUNCTION: Get Details of a Specific Car
-    // ============================================
     function getCarDetails(PDO $pdo): void {
         $carID = trim($_REQUEST['carID'] ?? '');
         
@@ -88,10 +73,6 @@
         echo json_encode(['success' => true, 'car' => $car]);
     }
 
-    // ============================================
-    // FUNCTION: Generate Unique Payment ID
-    // Format: PI0001, PI0002, PI0003, etc.
-    // ============================================
     function generatePaymentID(PDO $pdo): string {
         // Get the last payment ID from database
         $stmt = $pdo->query("SELECT paymentID FROM payment ORDER BY paymentID DESC LIMIT 1");
@@ -110,10 +91,6 @@
         return 'PI' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    // ============================================
-    // FUNCTION: Generate Unique Rental ID
-    // Format: RI0001, RI0002, RI0003, etc.
-    // ============================================
     function generateRentalID(PDO $pdo): string {
         // Get the last rental ID from database
         $stmt = $pdo->query("SELECT rentalID FROM rental ORDER BY rentalID DESC LIMIT 1");
@@ -132,7 +109,6 @@
         return 'RI' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    // ============================================
     // FUNCTION: Create New Booking
     // Steps:
     // 1. Validate input data
@@ -140,7 +116,6 @@
     // 3. Create payment record
     // 4. Create rental record
     // 5. Update car status to 'Rented'
-    // ============================================
     function createBooking(PDO $pdo): void {
         // Get input data from request body
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -174,10 +149,8 @@
             // Start database transaction (all-or-nothing)
             $pdo->beginTransaction();
 
-            // ----------------------------------------
             // STEP 1: Check if customer has active rentals
             // Customer can only have 1 active rental at a time
-            // ----------------------------------------
             $stmtCheck = $pdo->prepare(
                 "SELECT COUNT(*) as activeRentals 
                  FROM rental 
@@ -194,9 +167,7 @@
                 return;
             }
 
-            // ----------------------------------------
             // STEP 2: Generate payment ID and create payment record
-            // ----------------------------------------
             $paymentID = generatePaymentID($pdo);
             $paymentStatus = ($paymentMethod === 'online') ? 'Paid' : 'Pending';
             $paymentDate = ($paymentMethod === 'online') ? date('Y-m-d H:i:s') : null;
@@ -212,9 +183,7 @@
                 ':paymentStatus' => $paymentStatus
             ]);
 
-            // ----------------------------------------
             // STEP 3: Generate rental ID and create rental record
-            // ----------------------------------------
             $rentalID = generateRentalID($pdo);
             
             // Set delivery location (HQ for pickup, address for delivery)
@@ -237,9 +206,7 @@
                 ':deliveryLocation' => $deliveryLocation
             ]);
 
-            // ----------------------------------------
             // STEP 4: Update car status to 'Rented'
-            // ----------------------------------------
             $stmtUpdateCar = $pdo->prepare("UPDATE car SET status = 'Rented' WHERE carID = :carID");
             $stmtUpdateCar->execute([':carID' => $carID]);
 
@@ -262,9 +229,6 @@
         }
     }
 
-    // ============================================
-    // ROUTING: Handle different actions
-    // ============================================
     $action = $_REQUEST['action'] ?? null;
 
     switch ($action) {
