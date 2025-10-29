@@ -1,262 +1,392 @@
-<?php
-session_start();
-
-// Check if user is logged in
-if (!isset($_SESSION['customerID'])) {
-    header('Location: login.html');
-    exit;
-}
-
-$customerID = $_SESSION['customerID'];
-$custName = $_SESSION['custName'] ?? 'User';
-?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find a Rental Car - Car Rental</title>
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&display=swap"
       rel="stylesheet"
     />
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" type="text/css" href="../css/style.css" />
   </head>
+  
   <body>
-      <nav>
-        <ul>
-          <li><img src="../css/images/logo.png" alt="" /></li>
-          <li>
-            <a href="main.php"><u>Home</u></a>
-          </li>
-          <li><a href="mybookings.html">My Bookings</a></li>
-          <li><a href="faq.html">FAQ</a></li>
-          <li><a href="logout.php">Logout</a></li>
-        </ul>
-      </nav>
+    <!-- Navigation Bar -->
+    <nav>
+      <ul>
+        <li><img src="../css/images/logo.png" alt="Car Rental Logo" /></li>
+        <li><a href="main.html"><u>Home</u></a></li>
+        <li><a href="mybookings.html">My Bookings</a></li>
+        <li><a href="faq.html">FAQ</a></li>
+        <li><a href="#" onclick="logout(); return false;">Logout</a></li>
+      </ul>
+    </nav>
 
+    <!-- Main Content -->
     <div class="main">
-        <section id="carSearch">
-          <h1 id="carSearchHeader">Find a Rental Car</h1>
-          <p style="color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.45); margin-bottom: 20px;">
-            Welcome, <?php echo htmlspecialchars($custName); ?>!
-          </p>
+      <section id="carSearch">
+        <h1 id="carSearchHeader">Find a Rental Car</h1>
+        
+        <!-- Welcome Message -->
+        <p id="welcomeMessage" style="color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.45); margin-bottom: 20px;">
+          Welcome!
+        </p>
 
-          <div class="searchBar">
-            <label class="nameLabel" for="nameSearch">Search by car name</label>
-            <input id="nameSearch" type="search" placeholder="Search by car name">
-            <button id="searchBtn" type="button">Search</button>
+        <!-- Search Bar -->
+        <div class="searchBar">
+          <label class="nameLabel" for="nameSearch">Search by car name</label>
+          <input id="nameSearch" type="search" placeholder="Search by car name" autocomplete="off">
+          <button id="searchBtn" type="button">Search</button>
+        </div>
+
+        <!-- Filters Panel -->
+        <form id="filtersForm" class="filtersPanel" onsubmit="return false">
+          <!-- Location Filter -->
+          <div class="filterField">
+            <label for="locationSelect">Location</label>
+            <select id="locationSelect">
+              <option value="">Anywhere</option>
+              <option>Gadong</option>
+              <option>Kiulap</option>
+              <option>Jerudong</option>
+              <option>BSB</option>
+            </select>
           </div>
 
-          
-    <form id="filtersForm" class="filtersPanel" onsubmit="return false">
-      <div class="filterField">
-        <label for="locationSelect">Location</label>
-        <select id="locationSelect">
-          <option value="">Anywhere</option>
-          <option>Gadong</option><option>Kiulap</option>
-          <option>Jerudong</option><option>BSB</option>
-        </select>
-      </div>
+          <!-- Body Type Filter -->
+          <div class="filterField">
+            <label for="typeSelect">Body type</label>
+            <select id="typeSelect">
+              <option value="">Any</option>
+              <!-- Dynamically populated from database -->
+            </select>
+          </div>
 
-      <div class="filterField">
-        <label for="typeSelect">Body type</label>
-        <select id="typeSelect">
-          <option value="">Any</option>
-        </select>
-      </div>
+          <!-- Transmission Filter -->
+          <div class="filterField">
+            <label for="transmissionSelect">Transmission</label>
+            <select id="transmissionSelect">
+              <option value="">Any</option>
+              <option>Automatic</option>
+              <option>Manual</option>
+            </select>
+          </div>
 
-      <div class="filterField">
-        <label for="transmissionSelect">Transmission</label>
-        <select id="transmissionSelect">
-          <option value="">Any</option>
-          <option>Automatic</option><option>Manual</option>
-        </select>
-      </div>
+          <!-- Seats Filter -->
+          <div class="filterField">
+            <label for="seatsSelect">Seats (min)</label>
+            <select id="seatsSelect">
+              <option value="">Any</option>
+              <option value="2">2+</option>
+              <option value="4">4+</option>
+              <option value="5">5+</option>
+              <option value="7">7+</option>
+            </select>
+          </div>
 
-      <div class="filterField">
-        <label for="seatsSelect">Seats (min)</label>
-        <select id="seatsSelect">
-          <option value="">Any</option>
-          <option value="2">2+</option>
-          <option value="4">4+</option>
-          <option value="5">5+</option>
-          <option value="7">7+</option>
-        </select>
-      </div>
+          <!-- Price Filter -->
+          <div class="filterField">
+            <label for="maxPriceInput">Max price / day (B$)</label>
+            <input id="maxPriceInput" type="number" min="0" step="1" placeholder="e.g. 60">
+          </div>
 
-      <div class="filterField">
-        <label for="maxPriceInput">Max price / day (B$)</label>
-        <input id="maxPriceInput" type="number" min="0" step="1" placeholder="e.g. 60">
-      </div>
+          <!-- Sort Options -->
+          <div class="filterField">
+            <label for="sortSelect">Sort</label>
+            <select id="sortSelect">
+              <option value="">Relevance</option>
+              <option value="price-asc">Price/day: Low → High</option>
+              <option value="price-desc">Price/day: High → Low</option>
+              <option value="name-asc">Name: A → Z</option>
+              <option value="name-desc">Name: Z → A</option>
+            </select>
+          </div>
 
-      <div class="filterField">
-        <label for="sortSelect">Sort</label>
-        <select id="sortSelect">
-          <option value="">Relevance</option>
-          <option value="price-asc">Price/day: Low → High</option>
-          <option value="price-desc">Price/day: High → Low</option>
-          <option value="name-asc">Name: A → Z</option>
-          <option value="name-desc">Name: Z → A</option>
-        </select>
-      </div>
+          <!-- Filter Actions -->
+          <div class="filtersActions">
+            <button type="button" id="applyBtn" class="actionBtn">Apply</button>
+            <button type="reset" id="resetBtn" class="actionBtn actionBtn--dark">Reset</button>
+          </div>
+        </form>
 
-      <div class="filtersActions">
-        <button type="button" id="applyBtn" class="actionBtn">Apply</button>
-        <button type="reset"  id="resetBtn" class="actionBtn actionBtn--dark">Reset</button>
-      </div>
-    </form>
-
-    <div id="results" class="carResults">
-      <p id="loadingMessage">Loading cars...</p>
-    </div>
-
-    </section>
+        <!-- Results Container -->
+        <div id="results" class="carResults">
+          <p id="loadingMessage">Loading cars...</p>
+        </div>
+      </section>
     </div>
   
-  <script>
-    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/customerMain.php';
-    const customerID = '<?php echo $customerID; ?>'; // Available for booking
+    <script>
+      // ===== CONFIGURATION =====
+      const API_BASE_URL = 'http://localhost/car-rental-asg-xampp/src/api/customerMain.php';
+      const customerID = sessionStorage.getItem('customerID');
 
-    // --- Helpers ---
-    const $  = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
+      // ===== AUTHENTICATION CHECK =====
+      // Redirect to login if user is not authenticated
+      if (!customerID) {
+        alert('Please login first');
+        window.location.href = 'login.html';
+      }
 
-    let CARS = [];
+      // ===== UTILITY FUNCTIONS =====
+      /**
+       * Shorthand for querySelector
+       * @param {string} selector - CSS selector
+       */
+      const $ = selector => document.querySelector(selector);
+      
+      /**
+       * Shorthand for querySelectorAll
+       * @param {string} selector - CSS selector
+       */
+      const $$ = selector => Array.from(document.querySelectorAll(selector));
 
-    // Fetch available cars from database
-    async function loadCars() {
-      try {
-        const res = await fetch(`${apiBaseUrl}?action=list`);
-        const data = await res.json();
+      // ===== STATE =====
+      let CARS = []; // Store all available cars
+
+      // ===== SESSION MANAGEMENT =====
+      /**
+       * Handle user logout
+       */
+      function logout() {
+        sessionStorage.clear();
+        window.location.href = 'login.html';
+      }
+
+      /**
+       * Display welcome message with user's first name
+       */
+      function displayWelcomeMessage() {
+        const firstName = sessionStorage.getItem('firstName');
+        if (firstName) {
+          const welcomeEl = $('#welcomeMessage');
+          if (welcomeEl) {
+            welcomeEl.textContent = `Welcome, ${firstName}!`;
+          }
+        }
+      }
+
+      // ===== API FUNCTIONS =====
+      /**
+       * Fetch available cars from database
+       */
+      async function loadCars() {
+        try {
+          const response = await fetch(`${API_BASE_URL}?action=list`);
+          const data = await response.json();
+          
+          // Handle API errors
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to load cars');
+          }
+
+          // Transform API data to app format
+          CARS = data.cars.map(car => ({
+            id: car.carID,
+            name: `${car.makeName} ${car.carModel}`,
+            makeName: car.makeName,
+            carModel: car.carModel,
+            type: car.categoryName || 'Other',
+            transmission: car.transmission,
+            seats: car.capacity,
+            pricePerDay: parseFloat(car.ratePerDay),
+            img: car.imageURL || '../css/images/default.jpg',
+            description: car.description,
+            year: car.year
+          }));
+
+          // Remove loading message
+          const loadingMsg = $('#loadingMessage');
+          if (loadingMsg) loadingMsg.remove();
+          
+          // Display all cars
+          render(CARS);
+        } catch (error) {
+          $('#results').innerHTML = `<p class="error">Error loading cars: ${error.message}</p>`;
+          console.error('Load cars error:', error);
+        }
+      }
+
+      /**
+       * Fetch car categories for filter dropdown
+       */
+      async function loadCategories() {
+        try {
+          const response = await fetch(`${API_BASE_URL}?action=categories`);
+          const data = await response.json();
+          
+          // Populate category dropdown if successful
+          if (response.ok && data.success) {
+            const typeSelect = $('#typeSelect');
+            const existingOptions = typeSelect.innerHTML;
+            typeSelect.innerHTML = existingOptions + data.categories
+              .map(cat => `<option>${cat.categoryName}</option>`)
+              .join('');
+          }
+        } catch (error) {
+          console.error('Failed to load categories:', error);
+        }
+      }
+
+      // ===== RENDERING FUNCTIONS =====
+      /**
+       * Render car cards to the results container
+       * @param {Array} carList - Filtered list of cars to display
+       */
+      function render(carList) {
+        const resultsContainer = $('#results');
         
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Failed to load cars');
+        // Show empty state if no cars found
+        if (carList.length === 0) {
+          resultsContainer.innerHTML = '<p class="noResults">No cars found matching your criteria.</p>';
+          return;
         }
 
-        CARS = data.cars.map(c => ({
-          id: c.carID,
-          name: `${c.makeName} ${c.carModel}`,
-          makeName: c.makeName,
-          carModel: c.carModel,
-          type: c.categoryName || 'Other',
-          transmission: c.transmission,
-          seats: c.capacity,
-          pricePerDay: parseFloat(c.ratePerDay),
-          img: c.imageURL || '../css/images/default.jpg',
-          description: c.description,
-          year: c.year
-        }));
-
-        const loadingMsg = $('#loadingMessage');
-        if (loadingMsg) loadingMsg.remove();
-        
-        render(CARS);
-      } catch (err) {
-        $('#results').innerHTML = `<p class="error">Error loading cars: ${err.message}</p>`;
+        // Generate and display car cards
+        resultsContainer.innerHTML = carList.map(car => `
+          <a class="carLink" href="booking.html?id=${encodeURIComponent(car.id)}" aria-label="Book ${car.name}">
+            <article class="carCard">
+              <img src="${car.img}" alt="${car.name}">
+              <div class="carBody">
+                <h3 class="carTitle">${car.name}</h3>
+                <p class="carMeta">${car.type} · ${car.transmission} · ${car.seats} seats</p>
+                <div class="carPrice">B$ ${car.pricePerDay.toFixed(2)} / day</div>
+              </div>
+            </article>
+          </a>
+        `).join('');
       }
-    }
 
-    // Fetch categories for filter dropdown
-    async function loadCategories() {
-      try {
-        const res = await fetch(`${apiBaseUrl}?action=categories`);
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-          const typeSelect = $('#typeSelect');
-          const existingOptions = typeSelect.innerHTML;
-          typeSelect.innerHTML = existingOptions + data.categories
-            .map(cat => `<option>${cat.categoryName}</option>`)
-            .join('');
+      // ===== FILTER FUNCTIONS =====
+      /**
+       * Apply all active filters and search query to car list
+       */
+      function applyFilters() {
+        // Get all filter values
+        const searchQuery = $('#nameSearch')?.value.trim().toLowerCase() || '';
+        const location = $('#locationSelect')?.value || '';
+        const type = $('#typeSelect')?.value || '';
+        const transmission = $('#transmissionSelect')?.value || '';
+        const minSeats = parseInt($('#seatsSelect')?.value || '0', 10);
+        const maxPrice = parseFloat($('#maxPriceInput')?.value || '0');
+        const sortOption = $('#sortSelect')?.value || '';
+
+        // Filter cars based on criteria
+        let filteredCars = CARS.filter(car => {
+          // Name search filter
+          if (searchQuery && !car.name.toLowerCase().includes(searchQuery)) {
+            return false;
+          }
+          // Location filter (if location field exists)
+          if (location && car.location !== location) {
+            return false;
+          }
+          // Body type filter
+          if (type && car.type !== type) {
+            return false;
+          }
+          // Transmission filter
+          if (transmission && car.transmission !== transmission) {
+            return false;
+          }
+          // Minimum seats filter
+          if (minSeats && car.seats < minSeats) {
+            return false;
+          }
+          // Maximum price filter
+          if (maxPrice && car.pricePerDay > maxPrice) {
+            return false;
+          }
+          return true;
+        });
+
+        // Sort filtered results
+        switch (sortOption) {
+          case 'price-asc':
+            filteredCars.sort((a, b) => a.pricePerDay - b.pricePerDay);
+            break;
+          case 'price-desc':
+            filteredCars.sort((a, b) => b.pricePerDay - a.pricePerDay);
+            break;
+          case 'name-asc':
+            filteredCars.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+          case 'name-desc':
+            filteredCars.sort((a, b) => b.name.localeCompare(a.name));
+            break;
         }
-      } catch (err) {
-        console.error('Failed to load categories:', err);
-      }
-    }
 
-    // Render cards into #results (.carResults)
-    function render(list){
-      if (list.length === 0) {
-        $('#results').innerHTML = '<p class="noResults">No cars found matching your criteria.</p>';
-        return;
+        // Render filtered and sorted results
+        render(filteredCars);
       }
 
-      $('#results').innerHTML = list.map(c => `
-        <a class="carLink" href="booking.html?id=${encodeURIComponent(c.id)}" aria-label="Book ${c.name}">
-          <article class="carCard">
-            <img src="${c.img}" alt="${c.name}">
-            <div class="carBody">
-              <h3 class="carTitle">${c.name}</h3>
-              <p class="carMeta">${c.type} · ${c.transmission} · ${c.seats} seats</p>
-              <div class="carPrice">B$ ${c.pricePerDay.toFixed(2)} / day</div>
-            </div>
-          </article>
-        </a>
-      `).join('');
-    }
-
-    // Apply filters + name search
-    function applyFilters(){
-      const qName = $('#nameSearch')?.value.trim().toLowerCase() || '';
-      const loc   = $('#locationSelect')?.value || '';
-      const type  = $('#typeSelect')?.value || '';
-      const trans = $('#transmissionSelect')?.value || '';
-      const seats = parseInt($('#seatsSelect')?.value || '0', 10);
-      const maxP  = parseFloat($('#maxPriceInput')?.value || '0');
-      const sort  = $('#sortSelect')?.value || '';
-
-      let list = CARS.filter(c => {
-        if (qName && !c.name.toLowerCase().includes(qName)) return false;
-        if (loc   && c.location !== loc) return false;
-        if (type  && c.type !== type) return false;
-        if (trans && c.transmission !== trans) return false;
-        if (seats && c.seats < seats) return false;
-        if (maxP  && c.pricePerDay > maxP) return false;
-        return true;
-      });
-
-      switch (sort){
-        case 'price-asc':  list.sort((a,b)=> a.pricePerDay - b.pricePerDay); break;
-        case 'price-desc': list.sort((a,b)=> b.pricePerDay - a.pricePerDay); break;
-        case 'name-asc':   list.sort((a,b)=> a.name.localeCompare(b.name));  break;
-        case 'name-desc':  list.sort((a,b)=> b.name.localeCompare(a.name));  break;
-      }
-
-      render(list);
-    }
-
-    // Wire up buttons/inputs
-    $('#searchBtn')?.addEventListener('click', applyFilters);
-    $('#nameSearch')?.addEventListener('keydown', e => { 
-      if (e.key === 'Enter'){ 
-        e.preventDefault(); 
-        applyFilters(); 
-      }
-    });
-    $('#applyBtn')?.addEventListener('click', applyFilters);
-
-    // Reset: native reset + clear the top search + re-render all
-    const form = document.getElementById('filtersForm');
-    form?.addEventListener('reset', () => {
-      setTimeout(() => {
-        const nameInput = document.getElementById('nameSearch');
+      /**
+       * Reset all filters and show all cars
+       */
+      function resetFilters() {
+        // Clear search input
+        const nameInput = $('#nameSearch');
         if (nameInput) nameInput.value = '';
+        
+        // Show all cars
         render(CARS);
-      }, 0);
-    });
+      }
 
-    // Optional: live update when selects/inputs change
-    $$('#filtersForm input, #filtersForm select').forEach(el => 
-      el.addEventListener('change', applyFilters)
-    );
+      // ===== EVENT LISTENERS =====
+      /**
+       * Initialize event listeners for search and filters
+       */
+      function initializeEventListeners() {
+        // Search button click
+        $('#searchBtn')?.addEventListener('click', applyFilters);
+        
+        // Enter key in search input
+        $('#nameSearch')?.addEventListener('keydown', (event) => { 
+          if (event.key === 'Enter') { 
+            event.preventDefault(); 
+            applyFilters(); 
+          }
+        });
+        
+        // Apply filters button
+        $('#applyBtn')?.addEventListener('click', applyFilters);
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      await Promise.all([loadCategories(), loadCars()]);
-    });
+        // Reset button - clear all filters
+        const filtersForm = $('#filtersForm');
+        filtersForm?.addEventListener('reset', () => {
+          setTimeout(resetFilters, 0); // Timeout ensures form reset completes first
+        });
+
+        // Live update when filter inputs change
+        $$('#filtersForm input, #filtersForm select').forEach(element => 
+          element.addEventListener('change', applyFilters)
+        );
+      }
+
+      // ===== PAGE INITIALIZATION =====
+      /**
+       * Initialize page on DOM load
+       */
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Display welcome message
+        displayWelcomeMessage();
+        
+        // Setup event listeners
+        initializeEventListeners();
+        
+        // Load data from API
+        await Promise.all([
+          loadCategories(),
+          loadCars()
+        ]);
+      });
     </script>
-
   </body>
 </html>
