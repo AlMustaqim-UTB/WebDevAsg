@@ -74,39 +74,78 @@
     }
 
     function generatePaymentID(PDO $pdo): string {
-        // Get the last payment ID from database
-        $stmt = $pdo->query("SELECT paymentID FROM payment ORDER BY paymentID DESC LIMIT 1");
-        $lastPayment = $stmt->fetch();
+        $maxAttempts = 100; // Increase attempts
         
-        if ($lastPayment && !empty($lastPayment['paymentID'])) {
-            // Extract numeric part (PI0001 → 1)
-            $lastNumber = intval(substr($lastPayment['paymentID'], 2));
-            $newNumber = $lastNumber + 1;
-        } else {
-            // First payment ever
-            $newNumber = 1;
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            // Get the highest numeric value from existing payment IDs
+            $stmt = $pdo->query("
+                SELECT paymentID 
+                FROM payment 
+                WHERE paymentID LIKE 'PI%' 
+                ORDER BY CAST(SUBSTRING(paymentID, 3) AS UNSIGNED) DESC 
+                LIMIT 1
+            ");
+            $lastID = $stmt->fetchColumn();
+            
+            if ($lastID) {
+                // Extract number: PI0004 -> 4, then add 1
+                $num = intval(substr($lastID, 2)) + 1;
+            } else {
+                // No payments exist yet
+                $num = 1;
+            }
+            
+            // Add the attempt number to avoid duplicates in rapid succession
+            $num += $attempt;
+            $newID = 'PI' . str_pad($num, 4, '0', STR_PAD_LEFT);
+            
+            // Check if this ID already exists
+            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM payment WHERE paymentID = ?");
+            $checkStmt->execute([$newID]);
+            
+            if ($checkStmt->fetchColumn() == 0) {
+                // ID is unique, return it
+                return $newID;
+            }
         }
         
-        // Format: PI + 4-digit number (PI0001)
-        return 'PI' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        throw new Exception("Unable to generate unique payment ID after $maxAttempts attempts");
     }
 
     function generateRentalID(PDO $pdo): string {
-        // Get the last rental ID from database
-        $stmt = $pdo->query("SELECT rentalID FROM rental ORDER BY rentalID DESC LIMIT 1");
-        $lastRental = $stmt->fetch();
+        $maxAttempts = 100; // Increase attempts
         
-        if ($lastRental && !empty($lastRental['rentalID'])) {
-            // Extract numeric part (RI0001 → 1)
-            $lastNumber = intval(substr($lastRental['rentalID'], 2));
-            $newNumber = $lastNumber + 1;
-        } else {
-            // First rental ever
-            $newNumber = 1;
+        for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+            // Get the highest numeric value from existing rental IDs
+            $stmt = $pdo->query("
+                SELECT rentalID 
+                FROM rental 
+                WHERE rentalID LIKE 'RI%' 
+                ORDER BY CAST(SUBSTRING(rentalID, 3) AS UNSIGNED) DESC 
+                LIMIT 1
+            ");
+            $lastID = $stmt->fetchColumn();
+            
+            if ($lastID) {
+                $num = intval(substr($lastID, 2)) + 1;
+            } else {
+                $num = 1;
+            }
+            
+            // Add the attempt number to avoid duplicates
+            $num += $attempt;
+            $newID = 'RI' . str_pad($num, 4, '0', STR_PAD_LEFT);
+            
+            // Check if this ID already exists
+            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM rental WHERE rentalID = ?");
+            $checkStmt->execute([$newID]);
+            
+            if ($checkStmt->fetchColumn() == 0) {
+                return $newID;
+            }
         }
         
-        // Format: RI + 4-digit number (RI0001)
-        return 'RI' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        throw new Exception("Unable to generate unique rental ID after $maxAttempts attempts");
     }
 
     // FUNCTION: Create New Booking
