@@ -117,7 +117,7 @@
       // Different actions for past vs active bookings
       const actionsHtml = isPast
         ? `<a class="btnGhost" href="booking.html?carID=${booking.carID}">Book Again</a>`
-        : `<a class="btnGhost" href="booking.html?id=${booking.rentalID}">View</a>
+        : `
            <button class="btnDanger" type="button" onclick="cancelBooking('${booking.rentalID}')">Cancel</button>`;
 
       return `

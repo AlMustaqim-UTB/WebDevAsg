@@ -63,6 +63,7 @@ nav a {
   display: flex;
   align-items: center;
   color: #fdf0d5;
+  text-align: center;
 }
 
 nav a:hover {
