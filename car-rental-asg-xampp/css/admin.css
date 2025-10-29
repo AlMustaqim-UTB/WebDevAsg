@@ -19,15 +19,16 @@ body::before {
   z-index: 0;
 }
 
-nav, main {
-  position: relative;
-  z-index: 1;
-}
+
+nav, main { position: relative; z-index: 2; }
 
 /* === NAVBAR === */
 nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
   background-color: rgba(0, 0, 0, 0.2);
   font-size: 25px;
+  z-index: 3;
 }
 
 nav ul {
@@ -36,6 +37,10 @@ nav ul {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  margin-block-start: 0em;
+  margin-block-end: 0em;
+  padding-inline-start: 0px;
+  unicode-bidi: normal;
 }
 
 nav li {
@@ -241,9 +246,6 @@ select.completed {
 }
 
 .logout-btn {
-  background-color: #0a9396;
-  padding: 10px 20px;
-  border-radius: 6px;
   margin-left: 20px;
 }
 
@@ -254,3 +256,5 @@ select.completed {
 
 
 }
+
+

@@ -34,6 +34,7 @@ main,
 footer {
   position: relative;
   z-index: 1;
+  font-family: "Alumni Sans Pinstripe", sans-serif;
 }
 
 nav {
