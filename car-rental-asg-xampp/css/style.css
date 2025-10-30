@@ -250,18 +250,19 @@ nav li:first-child img {
 }
 .carTitle {
   margin: 0 0 6px;
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   color: #0a2a66;
 }
 .carMeta {
   margin: 0;
   color: #334155;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 .carPrice {
   margin-top: 8px;
   color: #0a9396;
   font-weight: 700;
+  font-size: 1.05rem;
 }
 
 .carLink{
