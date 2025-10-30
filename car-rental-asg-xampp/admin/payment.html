@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Payment - Car Rental System</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/payment.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../css/images/logo.png" alt="Logo"></li>
+        <li><a href="customers.html">Customers</a></li>
+        <li><a href="cars.html">Cars</a></li>
+        <li><a href="rentals.html">Rentals</a></li>
+        <li><a href="payment.html">Payment</a></li>
+        <li><a href="report.html">Report</a></li>
+        <li><a href="../public/login.html" class="logout-btn">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="payment-container">
+        <h1>Payment Management</h1>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+          <div class="filter-group">
+            <!-- Status Filter -->
+            <div class="filter-item">
+              <label for="statusFilter">Filter by Status:</label>
+              <select id="statusFilter">
+                <option value="all">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <!-- Refresh Button -->
+            <div class="filter-item">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" onclick="loadPayments()">Refresh</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+          Loading payments...
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" style="display: none;"></div>
+
+        <!-- Payments Table -->
+        <div class="table-container">
+          <table class="payment-table">
+            <thead>
+              <tr>
+                <th>Payment ID</th>
+                <th>Payment Date</th>
+                <th>Payment Method</th>
+                <th>Payment Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="paymentTableBody">
+              <!-- Data will be loaded here dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="no-data" style="display: none;">
+          No payments found.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Payment Modal -->
+  <div id="editModal" class="modal-overlay" style="display: none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Edit Payment</h2>
+        <button class="close-btn" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="editPaymentID">
+          
+          <div class="form-group">
+            <label for="editPaymentDate">Payment Date:</label>
+            <input type="date" id="editPaymentDate" required>
+          </div>
+
+          <div class="form-group">
+            <label for="editPaymentMethod">Payment Method:</label>
+            <select id="editPaymentMethod" required>
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="editPaymentStatus">Payment Status:</label>
+            <select id="editPaymentStatus" required>
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal-overlay" style="display: none;">
+    <div class="modal modal-small">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete payment <strong id="deletePaymentID"></strong>?</p>
+        <p class="warning-text">This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/payment.php';
+    let paymentToDelete = null;
+
+    // ==========================================
+    // Load Payments from Database
+    // ==========================================
+    async function loadPayments() {
+      showLoading(true);
+      hideMessages();
+
+      try {
+        const response = await fetch(`${apiBaseUrl}?action=getPayments`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+
+        if (data.success) {
+          displayPayments(data.payments);
+        } else {
+          showError('Error loading payments: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load payments. Please check your connection.');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // ==========================================
+    // Display Payments in Table
+    // ==========================================
+    function displayPayments(payments) {
+      const tbody = document.getElementById('paymentTableBody');
+      const noData = document.getElementById('noDataMessage');
+      
+      // Apply status filter
+      const statusFilter = document.getElementById('statusFilter').value;
+
+      const filtered = payments.filter(payment => {
+        const matchesStatus = statusFilter === 'all' || payment.paymentStatus === statusFilter;
+        return matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        noData.style.display = 'block';
+        return;
+      }
+
+      noData.style.display = 'none';
+      tbody.innerHTML = filtered.map(payment => `
+        <tr>
+          <td>${escapeHtml(payment.paymentID)}</td>
+          <td>${formatDate(payment.paymentDate)}</td>
+          <td>${escapeHtml(payment.paymentMethod)}</td>
+          <td><span class="status-badge status-${payment.paymentStatus.toLowerCase()}">${escapeHtml(payment.paymentStatus)}</span></td>
+          <td class="action-buttons">
+            <button class="btn btn-edit" onclick="openEditModal('${payment.paymentID}')">Edit</button>
+            <button class="btn btn-delete" onclick="openDeleteModal('${payment.paymentID}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ==========================================
+    // Edit Payment Modal
+    // ==========================================
+    async function openEditModal(paymentID) {
+      try {
+        const response = await fetch(`${apiBaseUrl}?action=getPayment&paymentID=${paymentID}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const payment = data.payment;
+          document.getElementById('editPaymentID').value = payment.paymentID;
+          document.getElementById('editPaymentDate').value = payment.paymentDate;
+          document.getElementById('editPaymentMethod').value = payment.paymentMethod;
+          document.getElementById('editPaymentStatus').value = payment.paymentStatus;
+          document.getElementById('editModal').style.display = 'flex';
+        } else {
+          showError('Failed to load payment details');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load payment details');
+      }
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      document.getElementById('editForm').reset();
+    }
+
+    // Handle Edit Form Submission
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const paymentData = {
+        paymentID: document.getElementById('editPaymentID').value,
+        paymentDate: document.getElementById('editPaymentDate').value,
+        paymentMethod: document.getElementById('editPaymentMethod').value,
+        paymentStatus: document.getElementById('editPaymentStatus').value
+      };
+
+      try {
+        const response = await fetch(`${apiBaseUrl}?action=updatePayment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess('Payment updated successfully');
+          closeEditModal();
+          loadPayments();
+        } else {
+          showError('Error updating payment: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to update payment');
+      }
+    });
+
+    // ==========================================
+    // Delete Payment Modal
+    // ==========================================
+    function openDeleteModal(paymentID) {
+      paymentToDelete = paymentID;
+      document.getElementById('deletePaymentID').textContent = paymentID;
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      paymentToDelete = null;
+    }
+
+    async function confirmDelete() {
+      if (!paymentToDelete) return;
+
+      try {
+        const response = await fetch(`${apiBaseUrl}?action=deletePayment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentID: paymentToDelete })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showSuccess('Payment deleted successfully');
+          closeDeleteModal();
+          loadPayments();
+        } else {
+          showError('Error deleting payment: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to delete payment');
+      }
+    }
+
+    // ==========================================
+    // Utility Functions
+    // ==========================================
+    function showLoading(show) {
+      document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => errorDiv.style.display = 'none', 5000);
+    }
+
+    function showSuccess(message) {
+      const successDiv = document.getElementById('successMessage');
+      successDiv.textContent = message;
+      successDiv.style.display = 'block';
+      setTimeout(() => successDiv.style.display = 'none', 3000);
+    }
+
+    function hideMessages() {
+      document.getElementById('errorMessage').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric' 
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==========================================
+    // Event Listeners
+    // ==========================================
+    document.getElementById('statusFilter').addEventListener('change', loadPayments);
+
+    // Initialize - Load payments on page load
+    document.addEventListener('DOMContentLoaded', loadPayments);
+  </script>
+</body>
+</html>
