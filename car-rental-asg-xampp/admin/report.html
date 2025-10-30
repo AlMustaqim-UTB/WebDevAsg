@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Report - Car Rental System</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/report.css">
+</head>
+<body>
+  <div class="overlay">
+    <nav>
+      <ul>
+        <li><img src="../css/images/logo.png" alt="Logo"></li>
+        <li><a href="customers.html">Customers</a></li>
+        <li><a href="cars.html">Cars</a></li>
+        <li><a href="rentals.html">Rentals</a></li>
+        <li><a href="payment.html">Payment</a></li>
+        <li><a href="report.html">Report</a></li>
+        <li><a href="../public/login.html" class="logout-btn">Logout</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="report-container">
+        <h1>Business Report Dashboard</h1>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+          <div class="filter-group">
+            <!-- Start Date -->
+            <div class="filter-item">
+              <label for="startDate">Start Date:</label>
+              <input type="date" id="startDate">
+            </div>
+
+            <!-- End Date -->
+            <div class="filter-item">
+              <label for="endDate">End Date:</label>
+              <input type="date" id="endDate">
+            </div>
+
+            <!-- Generate Report Button -->
+            <div class="filter-item">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" onclick="loadReport()">Generate Report</button>
+            </div>
+
+            <!-- Print Button -->
+            <div class="filter-item">
+              <label>&nbsp;</label>
+              <button class="btn btn-success" onclick="printReport()">Print / Export PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Header (visible only when printing) -->
+        <div class="report-header">
+          <h1>Car Rental System - Business Report</h1>
+          <p id="reportPeriod">Period: All Time</p>
+          <p id="reportDate">Generated: <span id="generatedDate"></span></p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+          Loading report data...
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid" id="summaryGrid">
+          <!-- Rentals Summary -->
+          <div class="summary-card">
+            <h2>Summary of Rentals</h2>
+            <table class="summary-table">
+              <tr>
+                <td>Total Rentals</td>
+                <td class="value-highlight" id="totalRentals">0</td>
+              </tr>
+              <tr>
+                <td>Active</td>
+                <td class="value-success" id="activeRentals">0</td>
+              </tr>
+              <tr>
+                <td>Pending</td>
+                <td class="value-warning" id="pendingRentals">0</td>
+              </tr>
+              <tr>
+                <td>Completed</td>
+                <td class="value-info" id="completedRentals">0</td>
+              </tr>
+              <tr>
+                <td>Cancelled</td>
+                <td class="value-danger" id="cancelledRentals">0</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Cars Summary -->
+          <div class="summary-card">
+            <h2>Summary of Fleet</h2>
+            <table class="summary-table">
+              <tr>
+                <td>Total Fleet Size</td>
+                <td class="value-highlight" id="totalFleet">0</td>
+              </tr>
+              <tr>
+                <td>Available</td>
+                <td class="value-success" id="availableCars">0</td>
+              </tr>
+              <tr>
+                <td>Currently Rented</td>
+                <td class="value-warning" id="rentedCars">0</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Profit Summary -->
+          <div class="summary-card">
+            <h2>Summary of Profit</h2>
+            <table class="summary-table">
+              <tr>
+                <td>Gross Profit</td>
+                <td class="value-highlight" id="grossProfit">BND $0.00</td>
+              </tr>
+              <tr>
+                <td>Outstanding Payments</td>
+                <td class="value-danger" id="outstandingPayments">BND $0.00</td>
+              </tr>
+              <tr>
+                <td>Completed Payments</td>
+                <td class="value-success" id="completedPayments">0</td>
+              </tr>
+              <tr>
+                <td>Pending Payments</td>
+                <td class="value-warning" id="pendingPayments">0</td>
+              </tr>
+              <tr>
+                <td>Cancelled Payments</td>
+                <td class="value-danger" id="cancelledPayments">0</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const apiBaseUrl = 'http://localhost/car-rental-asg-xampp/src/api/report.php';
+
+    // Get date range from inputs
+    function getDateRange() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+
+      // If both dates are empty, return null (load all data)
+      if (!startDate && !endDate) {
+        return { startDate: null, endDate: null };
+      }
+
+      // Validate that both dates are provided if one is provided
+      if (!startDate || !endDate) {
+        showError('Please select both start and end dates');
+        return null;
+      }
+
+      // Validate that start date is before or equal to end date
+      if (startDate > endDate) {
+        showError('Start date must be before or equal to end date');
+        return null;
+      }
+
+      return { startDate, endDate };
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+      return 'BND $' + parseFloat(amount || 0).toFixed(2);
+    }
+
+    // Show error message
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+      setTimeout(() => {
+        errorDiv.style.display = 'none';
+      }, 5000);
+    }
+
+    // Show loading indicator
+    function showLoading(show) {
+      document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+      document.getElementById('summaryGrid').style.display = show ? 'none' : 'grid';
+    }
+
+    // Load report data
+    async function loadReport() {
+      const dateRange = getDateRange();
+      if (dateRange === null) return;
+
+      showLoading(true);
+      document.getElementById('errorMessage').style.display = 'none';
+
+      try {
+        const params = new URLSearchParams({ action: 'getReport' });
+        if (dateRange.startDate) params.append('startDate', dateRange.startDate);
+        if (dateRange.endDate) params.append('endDate', dateRange.endDate);
+
+        const response = await fetch(`${apiBaseUrl}?${params}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+
+        if (data.success) {
+          // Update rentals summary
+          document.getElementById('totalRentals').textContent = data.rentals.total || 0;
+          document.getElementById('activeRentals').textContent = data.rentals.active || 0;
+          document.getElementById('pendingRentals').textContent = data.rentals.pending || 0;
+          document.getElementById('completedRentals').textContent = data.rentals.completed || 0;
+          document.getElementById('cancelledRentals').textContent = data.rentals.cancelled || 0;
+
+          // Update cars summary
+          document.getElementById('totalFleet').textContent = data.cars.total || 0;
+          document.getElementById('availableCars').textContent = data.cars.available || 0;
+          document.getElementById('rentedCars').textContent = data.cars.rented || 0;
+
+          // Update profit summary
+          document.getElementById('grossProfit').textContent = formatCurrency(data.profit.gross);
+          document.getElementById('outstandingPayments').textContent = formatCurrency(data.profit.outstanding);
+          document.getElementById('completedPayments').textContent = data.profit.completedCount || 0;
+          document.getElementById('pendingPayments').textContent = data.profit.pendingCount || 0;
+          document.getElementById('cancelledPayments').textContent = data.profit.cancelledCount || 0;
+
+          // Update report period
+          let periodText = 'All Time';
+          if (dateRange.startDate && dateRange.endDate) {
+            periodText = `${dateRange.startDate} to ${dateRange.endDate}`;
+          }
+          
+          document.getElementById('reportPeriod').textContent = `Period: ${periodText}`;
+          document.getElementById('generatedDate').textContent = new Date().toLocaleString();
+        } else {
+          showError('Error loading report: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load report data. Please check your connection and try again.');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Print report
+    function printReport() {
+      window.print();
+    }
+
+    // Load initial report on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadReport();
+    });
+  </script>
+</body>
+</html>
