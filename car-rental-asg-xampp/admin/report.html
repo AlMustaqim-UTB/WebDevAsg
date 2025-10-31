@@ -57,7 +57,6 @@
         <!-- Report Header (visible only when printing) -->
         <div class="report-header">
           <h1>Car Rental System - Business Report</h1>
-          <p id="reportPeriod">Period: All Time</p>
           <p id="reportDate">Generated: <span id="generatedDate"></span></p>
         </div>
 
@@ -238,13 +237,6 @@
           document.getElementById('pendingPayments').textContent = data.profit.pendingCount || 0;
           document.getElementById('cancelledPayments').textContent = data.profit.cancelledCount || 0;
 
-          // Update report period
-          let periodText = 'All Time';
-          if (dateRange.startDate && dateRange.endDate) {
-            periodText = `${dateRange.startDate} to ${dateRange.endDate}`;
-          }
-          
-          document.getElementById('reportPeriod').textContent = `Period: ${periodText}`;
           document.getElementById('generatedDate').textContent = new Date().toLocaleString();
         } else {
           showError('Error loading report: ' + (data.error || 'Unknown error'));
