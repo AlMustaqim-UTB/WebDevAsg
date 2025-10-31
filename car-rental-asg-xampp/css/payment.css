@@ -132,14 +132,14 @@
 }
 
 .payment-table thead {
-    background: #f8f9fa;
+    background: #004aad;
 }
 
 .payment-table th {
     padding: 15px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
-    color: #333;
+    color: white;
     border-bottom: 2px solid #dee2e6;
 }
 
